@@ -39,7 +39,12 @@ VERSION="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["versi
 BUILD="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["build"])' "$OUT/installer.json")"
 say "== verify Apple signature of InstallAssistant.pkg"
 pkgutil --check-signature "$WORK/InstallAssistant.pkg" | tee -a "$LOG"
-pkgutil --check-signature "$WORK/InstallAssistant.pkg" | grep -q "Apple Inc." || { say "NOT signed by Apple"; exit 1; }
+SIG="$(pkgutil --check-signature "$WORK/InstallAssistant.pkg")"
+# Must be Apple-signed and chain to Apple Root CA (fingerprint pinned)
+echo "$SIG" | grep -q "Status: signed Apple Software" || { say "NOT signed by Apple"; exit 1; }
+echo "$SIG" | tr -d ' \n' | grep -q "B0B1730ECBC7FF4505142C49F1295E6EDA6BCAED7E2C68C5BE91B5A11001F024" \
+  || { say "certificate chain does not end at Apple Root CA"; exit 1; }
+say "signature OK: Apple Software, chained to Apple Root CA"
 shasum -a 256 "$WORK/InstallAssistant.pkg" | tee -a "$LOG"
 
 say "== expand installer app"
