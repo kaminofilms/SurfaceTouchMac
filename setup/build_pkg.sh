@@ -70,6 +70,6 @@ productbuild --distribution "$OUT/distribution.xml" --resources "$OUT/resources"
   --package-path "$OUT" "$OUT/SurfaceTouchMac-Setup.pkg"
 
 echo "== package contents"
-pkgutil --payload-files "$OUT/component.pkg" | sed 's/^/  /' | head -80
+pkgutil --payload-files "$OUT/component.pkg" | sed 's/^/  /' | awk 'NR<=80'
 pkgutil --check-signature "$OUT/SurfaceTouchMac-Setup.pkg" || echo "(unsigned: no Developer ID Installer certificate)"
 shasum -a 256 "$OUT/SurfaceTouchMac-Setup.pkg"

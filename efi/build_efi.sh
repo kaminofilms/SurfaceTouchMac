@@ -52,7 +52,7 @@ for a in "$DL"/*; do
     *) say "skipping asset $(basename "$a")" ;;
   esac
 done
-find "$DL/unz" -maxdepth 4 -type d | head -40 | tee -a "$REPORT"
+find "$DL/unz" -maxdepth 4 -type d | awk 'NR<=40' | tee -a "$REPORT"
 # nested archives (e.g. EFI.zip inside a release zip)
 find "$DL/unz" -type f \( -name '*.zip' -o -name '*.7z' \) | while read -r n; do
   mkdir -p "$n.d" && bsdtar -xf "$n" -C "$n.d"
@@ -61,7 +61,7 @@ done
 say "== config candidates"
 find "$DL/unz" -name '*.plist' -path '*OC*' -maxdepth 6 | grep -i config | tee -a "$REPORT"
 # The OC folder that contains OpenCore.efi
-OCDIR="$(dirname "$(find "$DL/unz" -name OpenCore.efi -path '*/OC/*' | head -1)")"
+OCDIR="$(dirname "$(find "$DL/unz" -name OpenCore.efi -path '*/OC/*' | awk 'NR==1')")"
 [ -d "$OCDIR" ] || { say "no OpenCore.efi found in base release"; exit 1; }
 EFISRC="$(dirname "$OCDIR")"
 say "base EFI folder: ${EFISRC#$DL/unz/}"
@@ -88,7 +88,7 @@ find "$OUT/EFI/OC" -maxdepth 1 -name 'config*.plist' -delete
 cp "$CONFIG" "$OUT/EFI/OC/config.plist"
 
 # OpenCore version actually bundled
-OCVER="$(strings "$OUT/EFI/OC/OpenCore.efi" | grep -Eo 'REL-[0-9]{3}' | head -1 | sed 's/REL-//; s/\(.\)\(.\)\(.\)/\1.\2.\3/')"
+OCVER="$(strings "$OUT/EFI/OC/OpenCore.efi" | grep -Eo 'REL-[0-9]{3}' | awk 'NR==1' | sed 's/REL-//; s/\(.\)\(.\)\(.\)/\1.\2.\3/' || true)"
 say "bundled OpenCore: ${OCVER:-unknown}"
 [ -n "$OCVER" ] || { say "cannot determine OpenCore version"; exit 1; }
 

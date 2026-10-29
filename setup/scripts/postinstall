@@ -41,7 +41,7 @@ if [ -n "$running_serial" ] && [ "$running_serial" != "STM-PLACEHOLDER" ] && [ -
 else
   model="$($PB -c 'Print :PlatformInfo:Generic:SystemProductName' "$CFG")"
   echo "SMBIOS: generating a new identity for $model"
-  line="$("$STM/bin/macserial" -m "$model" -n 1 | head -1)"
+  line="$("$STM/bin/macserial" -m "$model" -n 1 | awk 'NR==1')"
   serial="$(echo "$line" | awk -F' \\| ' '{print $1}' | tr -d ' ')"
   mlb="$(echo "$line" | awk -F' \\| ' '{print $2}' | tr -d ' ')"
   [ -n "$serial" ] && [ -n "$mlb" ] || fail "macserial produced no serial"

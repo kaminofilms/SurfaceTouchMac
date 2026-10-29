@@ -41,7 +41,7 @@ xcodebuild -project BigSurface/BigSurface.xcodeproj -scheme BigSurface -configur
   -derivedDataPath "$OUT/dd" ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO \
   MACOSX_DEPLOYMENT_TARGET=10.13 GCC_TREAT_WARNINGS_AS_ERRORS=NO \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1 | tee "$OUT/xcodebuild.log" | grep -E "error:|warning: .*IPTSKernel|BUILD (SUCCEEDED|FAILED)" || true
-KEXT="$(find "$OUT/dd" -path '*Release/BigSurface.kext' -maxdepth 6 -type d | head -1)"
+KEXT="$(find "$OUT/dd" -path '*Release/BigSurface.kext' -maxdepth 6 -type d | awk 'NR==1')"
 [ -n "$KEXT" ] || { echo "BigSurface.kext not produced"; tail -50 "$OUT/xcodebuild.log"; exit 1; }
 cp -R "$KEXT" "$OUT/BigSurface.kext"
 

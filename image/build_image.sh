@@ -40,7 +40,7 @@ shasum -a 256 "$WORK/InstallAssistant.pkg" | tee -a "$LOG"
 say "== expand installer app"
 sudo installer -pkg "$WORK/InstallAssistant.pkg" -target / | tee -a "$LOG"
 rm -f "$WORK/InstallAssistant.pkg"
-APP="$(ls -d /Applications/Install\ macOS*.app | head -1)"
+APP="$(ls -d /Applications/Install\ macOS*.app | awk 'NR==1')"
 say "installer app: $APP"
 CIM="$APP/Contents/Resources/createinstallmedia"
 [ -x "$CIM" ] || { say "createinstallmedia missing"; exit 1; }
@@ -51,7 +51,7 @@ IMG="$WORK/SurfaceTouchMac-macOS${VERSION}.img"
 SIZE_MB=$(( APP_MB + 200 + 1024 + 1536 ))   # app + EFI + setup + slack
 rm -f "$IMG"
 mkfile -n "${SIZE_MB}m" "$IMG"
-DEV="$(hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount "$IMG" | head -1 | awk '{print $1}')"
+DEV="$(hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount "$IMG" | awk 'NR==1{print $1}')"
 say "attached $IMG as $DEV (${SIZE_MB} MB)"
 # Safety: only ever partition the disk image we just attached
 diskutil info -plist "$DEV" | plutil -extract VirtualOrPhysical raw - | grep -qx Virtual || { say "$DEV is not a virtual disk image; abort"; exit 1; }
@@ -69,7 +69,7 @@ cp -R "$PAYLOAD_DIR/EFI" "$WORK/EFI"
 CFG="$WORK/EFI/OC/config.plist"
 MODEL="$(/usr/libexec/PlistBuddy -c 'Print :PlatformInfo:Generic:SystemProductName' "$CFG")"
 chmod +x "$PAYLOAD_DIR/macserial"
-LINE="$("$PAYLOAD_DIR/macserial" -m "$MODEL" -n 1 | head -1)"
+LINE="$("$PAYLOAD_DIR/macserial" -m "$MODEL" -n 1 | awk 'NR==1')"
 SERIAL="$(echo "$LINE" | awk -F' \\| ' '{print $1}' | tr -d ' ')"
 MLB="$(echo "$LINE" | awk -F' \\| ' '{print $2}' | tr -d ' ')"
 [ -n "$SERIAL" ] && [ -n "$MLB" ] || { say "macserial failed"; exit 1; }
