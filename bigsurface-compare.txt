@@ -1,0 +1,99 @@
+################ BigSurface-6.6RC-Custom.kext
+== 
+com.xavier.BigSurface 1.2.0 1.2.0 
+{"com.apple.kpi.bsd":"16.7","com.xavier.VoodooSerial":"1.2","com.apple.iokit.IOPCIFamily":"2.9","org.coolstar.VoodooGPIO":"1.2","as.vit9696.Lilu":"1.2.0","com.apple.iokit.IOACPIFamily":"1.4","as.vit9696.VirtualSMC":"1.2.0","com.apple.kpi.iokit":"16.7","com.apple.kpi.mach":"16.7","com.apple.iokit.IOSMBusFamily":"1.0.0","com.apple.iokit.IOHIDFamily":"2.0","com.apple.kpi.libkern":"16.7"}
+   personality Surface Ambient Light Sensor -> SurfaceAmbientLightSensorDriver VoodooI2CDeviceNub {}
+   personality Surface Battery -> SurfaceBatteryDriver SurfaceBatteryNub {'PerformanceMode': 1}
+   personality Surface Battery SMBus Controller -> SurfaceSMBusController SurfaceBatteryDriver {}
+   personality Surface Button -> SurfaceButtonDriver IOACPIPlatformDevice {}
+   personality Surface Management Engine -> SurfaceManagementEngineDriver IOPCIDevice {}
+   personality Surface Serial Hub -> SurfaceSerialHubDriver IOACPIPlatformDevice {}
+== /Contents/PlugIns/BigSurfaceHIDDriver.kext
+com.xavier.BigSurfaceHIDDriver 1.0 1.0.0 
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext/Contents/Info.plist: invalid object in plist for destination format
+
+== /Contents/PlugIns/VoodooGPIO.kext
+org.coolstar.VoodooGPIO 1.2.0 1.2.0 
+{"com.apple.kpi.libkern":"13.0","com.apple.iokit.IOACPIFamily":"1.4","com.apple.kpi.iokit":"13.0","com.apple.kpi.mach":"13.0"}
+   personality VoodooGPIOCannonLakeLP -> VoodooGPIOCannonLakeLP IOService {}
+   personality VoodooGPIOIceLakeLP -> VoodooGPIOIceLakeLP IOService {}
+   personality VoodooGPIOSunrisePointLP -> VoodooGPIOSunrisePointLP IOService {}
+== /Contents/PlugIns/VoodooInput.kext
+me.kishorprins.VoodooInput 1.1.7 1.1.7 
+{"com.apple.iokit.IOHIDFamily":"2.0","com.apple.kpi.iokit":"14","com.apple.kpi.mach":"13.0","com.apple.kpi.libkern":"14"}
+   personality Voodoo Input -> VoodooInput IOService {}
+== /Contents/PlugIns/VoodooSerial.kext
+com.xavier.VoodooSerial 1.2 1.2 
+{"com.apple.kpi.bsd":"8.0","com.apple.kpi.libkern":"14.0","org.coolstar.VoodooGPIO":"1.2","com.apple.iokit.IOACPIFamily":"1.4","com.apple.kpi.iokit":"14.0","com.apple.kpi.mach":"13.0","com.apple.iokit.IOPCIFamily":"2.9"}
+   personality VoodooI2CControllerDriver -> VoodooI2CControllerDriver VoodooI2CControllerNub {}
+   personality VoodooI2CPCIController -> VoodooI2CPCIController IOPCIDevice {}
+   personality VoodooI2CPCILakeController -> VoodooI2CPCILakeController IOPCIDevice {}
+   personality VoodooUARTController -> VoodooUARTController IOPCIDevice {}
+################ BigSurface.kext
+== 
+com.xavier.BigSurface 1.2.0 1.2.0 
+{"com.apple.kpi.bsd":"16.7","com.xavier.VoodooSerial":"1.2","com.apple.iokit.IOPCIFamily":"2.9","org.coolstar.VoodooGPIO":"1.2","as.vit9696.Lilu":"1.2.0","com.apple.iokit.IOACPIFamily":"1.4","as.vit9696.VirtualSMC":"1.2.0","com.apple.kpi.iokit":"16.7","com.apple.kpi.mach":"16.7","com.apple.iokit.IOSMBusFamily":"1.0.0","com.apple.iokit.IOHIDFamily":"2.0","com.apple.kpi.libkern":"16.7"}
+   personality Surface Ambient Light Sensor -> SurfaceAmbientLightSensorDriver VoodooI2CDeviceNub {}
+   personality Surface Battery -> SurfaceBatteryDriver SurfaceBatteryNub {'PerformanceMode': 1}
+   personality Surface Battery SMBus Controller -> SurfaceSMBusController SurfaceBatteryDriver {}
+   personality Surface Button -> SurfaceButtonDriver IOACPIPlatformDevice {}
+   personality Surface Management Engine -> SurfaceManagementEngineDriver IOPCIDevice {}
+   personality Surface Serial Hub -> SurfaceSerialHubDriver IOACPIPlatformDevice {}
+== /Contents/PlugIns/BigSurfaceHIDDriver.kext
+com.xavier.BigSurfaceHIDDriver 1.0 1.0.0 
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext/Contents/Info.plist: invalid object in plist for destination format
+
+== /Contents/PlugIns/VoodooGPIO.kext
+org.coolstar.VoodooGPIO 1.2.0 1.2.0 
+{"com.apple.kpi.libkern":"13.0","com.apple.iokit.IOACPIFamily":"1.4","com.apple.kpi.iokit":"13.0","com.apple.kpi.mach":"13.0"}
+   personality VoodooGPIOCannonLakeLP -> VoodooGPIOCannonLakeLP IOService {}
+   personality VoodooGPIOIceLakeLP -> VoodooGPIOIceLakeLP IOService {}
+   personality VoodooGPIOSunrisePointLP -> VoodooGPIOSunrisePointLP IOService {}
+== /Contents/PlugIns/VoodooInput.kext
+me.kishorprins.VoodooInput 1.1.7 1.1.7 
+{"com.apple.iokit.IOHIDFamily":"2.0","com.apple.kpi.iokit":"14","com.apple.kpi.mach":"13.0","com.apple.kpi.libkern":"14"}
+   personality Voodoo Input -> VoodooInput IOService {}
+== /Contents/PlugIns/VoodooSerial.kext
+com.xavier.VoodooSerial 1.2 1.2 
+{"com.apple.kpi.bsd":"8.0","com.apple.kpi.libkern":"14.0","org.coolstar.VoodooGPIO":"1.2","com.apple.iokit.IOACPIFamily":"1.4","com.apple.kpi.iokit":"14.0","com.apple.kpi.mach":"13.0","com.apple.iokit.IOPCIFamily":"2.9"}
+   personality VoodooI2CControllerDriver -> VoodooI2CControllerDriver VoodooI2CControllerNub {}
+   personality VoodooI2CPCIController -> VoodooI2CPCIController IOPCIDevice {}
+   personality VoodooI2CPCILakeController -> VoodooI2CPCILakeController IOPCIDevice {}
+   personality VoodooUARTController -> VoodooUARTController IOPCIDevice {}
+################ class / method symbol differences (C++ demangled, defined symbols)
+== BigSurface: only in custom: 1  only in ours: 0
+-- only in custom (first 40)
+VirtualSMCValue::VirtualSMCValue()
+-- only in ours (first 40)
+== BigSurfaceHIDDriver: only in custom: 0  only in ours: 16
+-- only in custom (first 40)
+-- only in ours (first 40)
+IntelPreciseTouchStylusDriver::kernelStylus(stm::StylusFrame const&)
+IntelPreciseTouchStylusDriver::kernelTouch(stm::TouchFrame const&)
+IntelPreciseTouchStylusDriver::loadKernelProcessingConfig()
+IntelPreciseTouchStylusDriver::sendKernelReport(IPTSHIDReport const*, unsigned int)
+IntelPreciseTouchStylusDriver::setDeviceMultitouch(bool)
+IPTSKernelSink::~IPTSKernelSink()
+IPTSKernelSink::onStylus(stm::StylusFrame const&)
+IPTSKernelSink::onTouch(stm::TouchFrame const&)
+stm::FrameParser::handleHeatmap(stm::Reader&, stm::FrameParser::Sink&)
+stm::FrameParser::parse(unsigned char const*, unsigned int, stm::FrameParser::Sink&)
+stm::FrameParser::parseRaw(stm::Reader&, stm::FrameParser::Sink&)
+stm::FrameParser::parseRawPayload(unsigned char const*, unsigned int, stm::FrameParser::Sink&)
+stm::FrameParser::parseReports(stm::Reader&, stm::FrameParser::Sink&)
+stm::FrameParser::parseStylus(stm::Reader&, stm::FrameParser::Sink&, bool)
+stm::HeatmapProcessor::HeatmapProcessor()
+vtable for IPTSKernelSink
+== VoodooGPIO: only in custom: 0  only in ours: 0
+-- only in custom (first 40)
+-- only in ours (first 40)
+== VoodooInput: only in custom: 0  only in ours: 0
+-- only in custom (first 40)
+-- only in ours (first 40)
+== VoodooSerial: only in custom: 0  only in ours: 0
+-- only in custom (first 40)
+-- only in ours (first 40)
+################ log strings only in custom (hints at its changes)
+== BigSurface
+== BigSurfaceHIDDriver
+== VoodooInput

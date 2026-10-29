@@ -1,0 +1,20 @@
+## structural self-test
+CHECK panel_nonactivating PASS 
+CHECK panel_never_key PASS 
+CHECK fits_screen PASS panel=(352.0, 93.0, 1216.0, 376.0) visible=(0.0, 85.0, 1920.0, 970.0)
+CHECK touch_sized_keys PASS min=96x72pt keys=52
+CHECK surface_pro7_metrics PASS unit=96 keyH=72 size=1216x376
+## interactive test (TextEdit)
+CHECK panel_nonactivating PASS 
+CHECK panel_never_key PASS 
+CHECK fits_screen PASS panel=(352.0, 93.0, 1216.0, 376.0) visible=(0.0, 85.0, 1920.0, 970.0)
+CHECK touch_sized_keys PASS min=96x72pt keys=52
+CHECK surface_pro7_metrics PASS unit=96 keyH=72 size=1216x376
+CHECK accessibility_trusted PASS 
+CHECK textedit_frontmost PASS 
+CHECK auto_show_on_text_focus PASS 
+CHECK taps_reached_keys PASS key outputs emitted by taps: 2
+CHECK post_event_access PASS CGPreflightPostEventAccess
+CHECK focused_text_length PASS characters in TextEdit document: 3 (expected 3)
+CHECK target_app_keeps_focus PASS frontmost=com.apple.TextEdit
+TYPED_EXPECTED hi!
