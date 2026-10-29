@@ -51,7 +51,7 @@ jobs:
       - name: Build BigSurface.kext with kernel multitouch
         run: |
           source efi/build/stage.env
-          export LILU_VER
+          export LILU_VER VSMC_VER
           bash kext/build_bigsurface.sh
       - name: Assemble + validate EFI (ocvalidate, check_efi)
         run: bash efi/build_efi.sh assemble

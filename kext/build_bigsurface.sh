@@ -36,6 +36,16 @@ unzip -q -o /tmp/lilu.zip -d /tmp/lilu
 cp -R /tmp/lilu/Lilu.kext Dependencies/
 echo "Lilu SDK: ${LILU_VER}"
 
+# VirtualSMC SDK (battery / sensor plugins use its API)
+if [ -z "${VSMC_VER:-}" ]; then
+  VSMC_VER="$(curl -fsSL https://api.github.com/repos/acidanthera/VirtualSMC/releases/latest | python3 -c 'import json,sys;print(json.load(sys.stdin)["tag_name"])')"
+fi
+curl -fsSL -o /tmp/vsmc.zip "https://github.com/acidanthera/VirtualSMC/releases/download/${VSMC_VER}/VirtualSMC-${VSMC_VER}-DEBUG.zip"
+rm -rf /tmp/vsmc && unzip -q -o /tmp/vsmc.zip -d /tmp/vsmc
+cp -R "$(find /tmp/vsmc -type d -name VirtualSMC.kext | awk 'NR==1')" Dependencies/
+[ -f Dependencies/VirtualSMC.kext/Contents/Resources/VirtualSMCSDK/kern_vsmcapi.hpp ] || { echo "VirtualSMC SDK headers missing"; exit 1; }
+echo "VirtualSMC SDK: ${VSMC_VER}"
+
 set -o pipefail
 xcodebuild -project BigSurface/BigSurface.xcodeproj -scheme BigSurface -configuration Release \
   -derivedDataPath "$OUT/dd" ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO \

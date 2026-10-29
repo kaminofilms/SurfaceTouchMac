@@ -125,7 +125,9 @@ fi
 say "== Lilu version in base EFI"
 LILU_VER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$OUT/EFI/OC/Kexts/Lilu.kext/Contents/Info.plist" 2>/dev/null || true)"
 say "Lilu: ${LILU_VER:-not present}"
-{ echo "LILU_VER=${LILU_VER}"; echo "OCVER=${OCVER}"; echo "CONFIG_NAME=$(basename "$CONFIG")"; } > "$OUT/stage.env"
+VSMC_VER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$OUT/EFI/OC/Kexts/VirtualSMC.kext/Contents/Info.plist" 2>/dev/null || true)"
+say "VirtualSMC: ${VSMC_VER:-not present}"
+{ echo "LILU_VER=${LILU_VER}"; echo "VSMC_VER=${VSMC_VER}"; echo "OCVER=${OCVER}"; echo "CONFIG_NAME=$(basename "$CONFIG")"; } > "$OUT/stage.env"
 [ "$MODE" = "fetch" ] && { say "fetch stage done"; exit 0; }
 fi
 CFG="$OUT/EFI/OC/config.plist"
