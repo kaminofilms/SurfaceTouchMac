@@ -2,7 +2,7 @@
 # Builds the bootable USB image (raw GPT disk) on a macOS runner.
 #
 #   partition 1  EFI           OpenCore for the Surface Pro 7 (unique SMBIOS)
-#   partition 2  SURFACESETUP  FAT32: SurfaceTouchMac-Setup.pkg + instructions
+#   partition 2  STMSETUP  FAT32: SurfaceTouchMac-Setup.pkg + instructions
 #   partition 3  Install macOS Tahoe   (Apple's createinstallmedia, full offline installer)
 #
 # Inputs (env): PAYLOAD_DIR (unzipped public payload: EFI/, SurfaceTouchMac-Setup.pkg, macserial)
@@ -58,7 +58,7 @@ APP_MB=$(du -sm "$APP" | cut -f1)
 
 say "== raw GPT image"
 IMG="$WORK/SurfaceTouchMac-macOS${VERSION}.img"
-SIZE_MB=$(( APP_MB + 200 + 1024 + 1536 ))   # app + EFI + setup + slack
+SIZE_MB=$(( APP_MB + 200 + 1024 + 3072 ))   # app + EFI + setup + slack for createinstallmedia
 rm -f "$IMG"
 mkfile -n "${SIZE_MB}m" "$IMG"
 DEV="$(hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount "$IMG" | awk 'NR==1{print $1}')"
@@ -66,7 +66,7 @@ say "attached $IMG as $DEV (${SIZE_MB} MB)"
 # Safety: only ever partition the disk image we just attached
 hdiutil info | grep -q "^${DEV}[[:space:]]" || { say "$DEV is not a disk image attached by hdiutil; abort"; exit 1; }
 say "safety: $DEV is our disk image ($(hdiutil info | grep -B30 "^${DEV}[[:space:]]" | grep image-path | tail -1 | sed 's/.*: //'))"
-sudo diskutil partitionDisk "$DEV" GPT FAT32 SURFACESETUP 1g JHFS+ STMINSTALL R | tee -a "$LOG"
+sudo diskutil partitionDisk "$DEV" GPT FAT32 STMSETUP 1g JHFS+ STMINSTALL R | tee -a "$LOG"
 diskutil list "$DEV" | tee -a "$LOG"
 EFI_PART="${DEV}s1"
 [ "$(diskutil info -plist "$EFI_PART" | plutil -extract Content raw -o - -)" = "EFI" ] || { say "s1 is not EFI"; exit 1; }
@@ -99,7 +99,7 @@ sync
 sudo diskutil unmount "$EFI_PART"
 
 say "== setup partition"
-SETUP_MNT=/Volumes/SURFACESETUP
+SETUP_MNT=/Volumes/STMSETUP
 cp "$PAYLOAD_DIR/SurfaceTouchMac-Setup.pkg" "$SETUP_MNT/"
 cp "$ROOT/docs/AFTER-INSTALL.txt" "$SETUP_MNT/READ ME FIRST.txt"
 ( cd "$SETUP_MNT" && shasum -a 256 SurfaceTouchMac-Setup.pkg > SHA256SUMS.txt )

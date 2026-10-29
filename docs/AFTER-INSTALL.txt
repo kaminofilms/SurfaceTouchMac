@@ -39,7 +39,7 @@ attached for those, or just wait: OpenCore picks the right entry by itself.
    - You can sign in with your Apple ID now; the identity is kept in step 5.
 
 5. RUN SURFACE SETUP (one time)
-   - Open the "SURFACESETUP" disk on the desktop / in Finder.
+   - Open the "STMSETUP" disk on the desktop / in Finder.
    - Right-click (long-press) SurfaceTouchMac-Setup.pkg -> Open -> Open.
      (It is not notarized by Apple, so macOS asks you to confirm. If it is
      blocked: System Settings -> Privacy & Security -> "Open Anyway".)

@@ -46,7 +46,7 @@ To write it from the phone, plug the USB drive in with a USB-C OTG adapter and u
 | Partition | Content |
 |---|---|
 | EFI | OpenCore for the Surface Pro 7 with BigSurface (kernel multitouch) and a unique SMBIOS |
-| SURFACESETUP | `SurfaceTouchMac-Setup.pkg` and `READ ME FIRST.txt` |
+| STMSETUP | `SurfaceTouchMac-Setup.pkg` and `READ ME FIRST.txt` |
 | Install macOS Tahoe | Apple's full offline installer (made with Apple's `createinstallmedia`) |
 
-Then follow **READ ME FIRST.txt** on the SURFACESETUP partition (also in `docs/AFTER-INSTALL.txt`).
+Then follow **READ ME FIRST.txt** on the STMSETUP partition (also in `docs/AFTER-INSTALL.txt`).
