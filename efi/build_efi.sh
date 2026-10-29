@@ -146,16 +146,23 @@ fi
 say "== SMBIOS placeholders (generated per device at install time)"
 MODEL="$(/usr/libexec/PlistBuddy -c 'Print :PlatformInfo:Generic:SystemProductName' "$CFG")"
 say "SMBIOS model: $MODEL"
-for k in SystemSerialNumber MLB SystemUUID; do
+for k in SystemSerialNumber MLB; do
   /usr/libexec/PlistBuddy -c "Set :PlatformInfo:Generic:$k STM-PLACEHOLDER" "$CFG"
 done
+# a syntactically valid all-zero UUID is the placeholder (ocvalidate requires a UUID)
+/usr/libexec/PlistBuddy -c "Set :PlatformInfo:Generic:SystemUUID 00000000-0000-0000-0000-000000000000" "$CFG"
 plutil -replace PlatformInfo.Generic.ROM -data "AAAAAAAA" "$CFG"
 
 say "== boot-args"
 /usr/libexec/PlistBuddy -c 'Print :NVRAM:Add:7C436110-AB2A-4BBB-A880-FE41995C9F82:boot-args' "$CFG" | tee -a "$REPORT" || true
 
 say "== validation: ocvalidate ${OCVER}"
-"$OUT/ocvalidate" "$CFG" | tee -a "$REPORT"
+# The base EFI uses the OCmod fork of OpenCore ${OCVER}. It adds fork-only keys
+# (e.g. Quirks/EnableForAll) that the official validator does not know. We
+# validate everything else with the official ${OCVER} ocvalidate on a copy with
+# exactly those keys removed, and list what was removed.
+bash "$HERE/validate_oc.sh" "$OUT/ocvalidate" "$CFG" | tee -a "$REPORT"
+test "${PIPESTATUS[0]}" -eq 0
 say "== validation: check_efi.py"
 python3 -I "$HERE/check_efi.py" "$OUT/EFI" --require-kext BigSurface.kext --require-kext Lilu.kext \
   --manifest "$OUT/efi-manifest.json" | tee -a "$REPORT"

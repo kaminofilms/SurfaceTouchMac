@@ -50,7 +50,9 @@ else
   $PB -c "Set :PlatformInfo:Generic:SystemUUID $(uuidgen)" "$CFG"
   plutil -replace PlatformInfo.Generic.ROM -data "$(head -c 6 /dev/urandom | base64)" "$CFG"
 fi
-if grep -q STM-PLACEHOLDER "$CFG"; then fail "SMBIOS placeholders left in config"; fi
+if grep -q STM-PLACEHOLDER "$CFG" || grep -q 00000000-0000-0000-0000-000000000000 "$CFG"; then
+  fail "SMBIOS placeholders left in config"
+fi
 
 # ---------------------------------------------------------------- 2. EFI
 "$STM/bin/stm-setup" install-efi --source "$WORK" || fail "OpenCore was not installed to the internal SSD (see messages above)"

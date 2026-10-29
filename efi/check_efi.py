@@ -123,7 +123,8 @@ def main(argv):
     # ---- Placeholders (public payload must not carry real SMBIOS)
     gen = cfg.get("PlatformInfo", {}).get("Generic", {})
     serial = gen.get("SystemSerialNumber", "")
-    if forbid_placeholder and PLACEHOLDER in (serial, gen.get("MLB", ""), gen.get("SystemUUID", "")):
+    if forbid_placeholder and (PLACEHOLDER in (serial, gen.get("MLB", ""))
+                               or gen.get("SystemUUID", "") == "00000000-0000-0000-0000-000000000000"):
         errors.append("PlatformInfo/Generic still contains placeholders; SMBIOS was not generated")
 
     # ---- Manifest

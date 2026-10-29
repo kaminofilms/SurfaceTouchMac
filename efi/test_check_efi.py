@@ -41,7 +41,7 @@ def make_efi(root, order_ok=True, missing_ssdt=False, placeholder=False):
         "Kernel": {"Add": [lilu, bs] if order_ok else [bs, lilu]},
         "PlatformInfo": {"Generic": {"SystemProductName": "MacBookAir9,1",
                                      "SystemSerialNumber": "STM-PLACEHOLDER" if placeholder else "C02ABCDEFGHI",
-                                     "MLB": "x", "SystemUUID": "y"}},
+                                     "MLB": "x", "SystemUUID": "00000000-0000-0000-0000-000000000000" if placeholder else "8E2B5D02-6A57-4E5B-9C55-1A2B3C4D5E6F"}},
     }
     with open(os.path.join(oc, "config.plist"), "wb") as f:
         plistlib.dump(cfg, f)
