@@ -106,7 +106,7 @@ cp "$ROOT/docs/AFTER-INSTALL.txt" "$SETUP_MNT/READ ME FIRST.txt"
 sync
 
 say "== filesystem checks"
-INSTALL_PART="$(diskutil list -plist "$DEV" | python3 -c 'import plistlib,sys; d=plistlib.load(sys.stdin.buffer); p=d["AllDisksAndPartitions"][0]["Partitions"]; print([x["DeviceIdentifier"] for x in p if x.get("VolumeName","").startswith("Install macOS")][0])')"
+INSTALL_PART="$(diskutil list -plist "$DEV" | python3 -c 'import plistlib,sys; d=plistlib.loads(sys.stdin.buffer.read()); p=d["AllDisksAndPartitions"][0]["Partitions"]; print([x["DeviceIdentifier"] for x in p if x.get("VolumeName","").startswith("Install macOS")][0])')"
 SETUP_PART="${DEV}s2"
 say "install partition: $INSTALL_PART"
 for v in "$INSTALL_PART" "$SETUP_PART"; do sudo diskutil unmount "$v" | tee -a "$LOG"; done
@@ -122,7 +122,7 @@ say "== checksums, compression, split (< 512 MiB parts)"
 BASE="$(basename "$IMG")"
 ( cd "$WORK" && shasum -a 256 "$BASE" ) | tee "$OUT/SHA256SUMS-img.txt" | tee -a "$LOG"
 cd "$OUT"
-xz -T0 -6 -c "$IMG" | split -b "$PART_SIZE" -a 3 - "${BASE}.xz.part-"
+xz -T0 -1 -c "$IMG" | split -b "$PART_SIZE" -a 3 - "${BASE}.xz.part-"
 rm -f "$IMG"
 shasum -a 256 "${BASE}.xz.part-"* > SHA256SUMS-parts.txt
 say "parts: $(ls "${BASE}.xz.part-"* | wc -l | tr -d ' ')"
