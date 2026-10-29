@@ -33,6 +33,10 @@ jobs:
     # Native Intel runner = same CPU architecture as the Surface Pro 7
     runs-on: macos-15-intel
     needs: host-tests
+    defaults:
+      run:
+        # every step's output is also kept in ci-logs/ (pushed to the ci-logs branch)
+        shell: bash --noprofile --norc -eo pipefail -c "mkdir -p $GITHUB_WORKSPACE/ci-logs; exec > >(tee -a $GITHUB_WORKSPACE/ci-logs/macos-build.log) 2>&1; echo \"### step $GITHUB_ACTION\"; source {0}"
     env:
       GH_TOKEN: ${{ github.token }}
       STM_VERSION: 0.1.${{ github.run_number }}
@@ -85,6 +89,19 @@ jobs:
           ( cd $P && find . -type f ! -name SHA256SUMS.txt -exec shasum -a 256 {} + | sort -k2 > SHA256SUMS.txt )
           ditto -c -k --keepParent $P SurfaceTouchMac-payload.zip
           shasum -a 256 SurfaceTouchMac-payload.zip | tee SurfaceTouchMac-payload.zip.sha256
+      - name: Push CI logs to the ci-logs branch
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p ci-logs && cd ci-logs
+          for f in ../efi/build/efi-report.txt ../efi/build/efi-manifest.json ../kext/build/xcodebuild.log \
+                   ../keyboard/dist/keyboard-ci.log ../keyboard/dist-tests.log ../setup/build/distribution.xml; do
+            [ -f "$f" ] && cp "$f" . || true
+          done
+          git init -q && git checkout -q -b ci-logs
+          git -c user.name=ci -c user.email=ci@localhost add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "logs ${GITHUB_RUN_ID}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-logs
       - uses: actions/upload-artifact@v4
         with:
           name: SurfaceTouchMac-payload

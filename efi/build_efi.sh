@@ -31,8 +31,25 @@ rm -rf "$OUT" && mkdir -p "$DL"
 
 say "== base EFI: ${BASE_EFI_REPO} ${BASE_EFI_TAG}"
 gh release download "$BASE_EFI_TAG" -R "$BASE_EFI_REPO" -D "$DL" --pattern '*'
-( cd "$DL" && shasum -a 256 * | tee -a "$REPORT" )
-for z in "$DL"/*.zip; do unzip -q -o "$z" -d "$DL/unz"; done
+( cd "$DL" && ls -la && shasum -a 256 * ) | tee -a "$REPORT"
+mkdir -p "$DL/unz"
+for a in "$DL"/*; do
+  [ -f "$a" ] || continue
+  case "$a" in
+    *.dmg) mnt="$(mktemp -d)"; hdiutil attach -readonly -nobrowse -mountpoint "$mnt" "$a" >/dev/null
+           cp -R "$mnt"/. "$DL/unz/$(basename "$a").d/" 2>/dev/null || { mkdir -p "$DL/unz/$(basename "$a").d"; cp -R "$mnt"/. "$DL/unz/$(basename "$a").d/"; }
+           hdiutil detach "$mnt" >/dev/null ;;
+    *.zip|*.7z|*.tar|*.tgz|*.tar.gz|*.tar.xz|*.rar)
+           mkdir -p "$DL/unz/$(basename "$a").d"
+           bsdtar -xf "$a" -C "$DL/unz/$(basename "$a").d" ;;
+    *) say "skipping asset $(basename "$a")" ;;
+  esac
+done
+find "$DL/unz" -maxdepth 4 -type d | head -40 | tee -a "$REPORT"
+# nested archives (e.g. EFI.zip inside a release zip)
+find "$DL/unz" -type f \( -name '*.zip' -o -name '*.7z' \) | while read -r n; do
+  mkdir -p "$n.d" && bsdtar -xf "$n" -C "$n.d"
+done
 
 say "== config candidates"
 find "$DL/unz" -name '*.plist' -path '*OC*' -maxdepth 6 | grep -i config | tee -a "$REPORT"
