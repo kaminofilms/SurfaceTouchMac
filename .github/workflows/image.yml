@@ -20,6 +20,9 @@ jobs:
     timeout-minutes: 300
     env:
       GH_TOKEN: ${{ github.token }}
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail -c "mkdir -p $RUNNER_TEMP/ci-logs; exec > >(tee -a $RUNNER_TEMP/ci-logs/image-build.log) 2>&1; echo \"### step $GITHUB_ACTION\"; source {0}"
     steps:
       # Build scripts come from the public repo; this private repo only needs
       # this workflow file.
@@ -53,3 +56,13 @@ jobs:
             --notes "Private: contains Apple macOS. Do not redistribute. See JOIN-AND-FLASH.md." \
             image/out/*
           echo "release: $TAG"
+      - name: Push CI logs to this private repo's ci-logs branch
+        if: always()
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/ci-logs"
+          cp "$GITHUB_WORKSPACE"/image/out/*.log "$GITHUB_WORKSPACE"/image/out/*.json "$GITHUB_WORKSPACE"/image/out/SHA256SUMS* . 2>/dev/null || true
+          git init -q && git checkout -q -b ci-logs
+          git -c user.name=ci -c user.email=ci@localhost add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "logs ${GITHUB_RUN_ID}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-logs
