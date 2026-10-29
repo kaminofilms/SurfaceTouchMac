@@ -27,6 +27,11 @@ DEV=""
 cleanup() { [ -n "$DEV" ] && hdiutil detach "$DEV" -force >/dev/null 2>&1 || true; }
 trap cleanup EXIT
 
+say "== disk space"
+df -h / | tee -a "$LOG"
+FREE_GB=$(df -g / | awk 'NR==2{print $4}')
+[ "$FREE_GB" -ge 40 ] || { say "only ${FREE_GB} GB free; need ~40 GB (installer + image + parts)"; exit 1; }
+
 say "== macOS installer (Apple software update catalog)"
 python3 -I "$HERE/fetch_installer.py" --major "$MACOS_MAJOR" --download "$WORK" > "$OUT/installer.json" 2> >(tee -a "$LOG" >&2)
 cat "$OUT/installer.json" | tee -a "$LOG"
@@ -54,11 +59,12 @@ mkfile -n "${SIZE_MB}m" "$IMG"
 DEV="$(hdiutil attach -imagekey diskimage-class=CRawDiskImage -nomount "$IMG" | awk 'NR==1{print $1}')"
 say "attached $IMG as $DEV (${SIZE_MB} MB)"
 # Safety: only ever partition the disk image we just attached
-diskutil info -plist "$DEV" | plutil -extract VirtualOrPhysical raw - | grep -qx Virtual || { say "$DEV is not a virtual disk image; abort"; exit 1; }
+hdiutil info | grep -q "^${DEV}[[:space:]]" || { say "$DEV is not a disk image attached by hdiutil; abort"; exit 1; }
+say "safety: $DEV is our disk image ($(hdiutil info | grep -B30 "^${DEV}[[:space:]]" | grep image-path | tail -1 | sed 's/.*: //'))"
 sudo diskutil partitionDisk "$DEV" GPT FAT32 SURFACESETUP 1g JHFS+ STMINSTALL R | tee -a "$LOG"
 diskutil list "$DEV" | tee -a "$LOG"
 EFI_PART="${DEV}s1"
-[ "$(diskutil info -plist "$EFI_PART" | plutil -extract Content raw -)" = "EFI" ] || { say "s1 is not EFI"; exit 1; }
+[ "$(diskutil info -plist "$EFI_PART" | plutil -extract Content raw -o - -)" = "EFI" ] || { say "s1 is not EFI"; exit 1; }
 
 say "== createinstallmedia (Apple)"
 sudo "$CIM" --volume /Volumes/STMINSTALL --nointeraction | tee -a "$LOG"
@@ -82,7 +88,7 @@ python3 -I "$ROOT/efi/check_efi.py" "$WORK/EFI" --forbid-placeholder --require-k
 chmod +x "$PAYLOAD_DIR/ocvalidate"
 bash "$ROOT/efi/validate_oc.sh" "$PAYLOAD_DIR/ocvalidate" "$CFG" | tee -a "$LOG"
 sudo diskutil mount "$EFI_PART" | tee -a "$LOG"
-EFI_MNT="$(diskutil info -plist "$EFI_PART" | plutil -extract MountPoint raw -)"
+EFI_MNT="$(diskutil info -plist "$EFI_PART" | plutil -extract MountPoint raw -o - -)"
 sudo cp -R "$WORK/EFI" "$EFI_MNT/"
 sync
 sudo diskutil unmount "$EFI_PART"
