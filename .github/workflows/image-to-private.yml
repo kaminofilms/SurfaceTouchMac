@@ -31,9 +31,14 @@ jobs:
     steps:
       - name: Check the private destination before doing any work
         run: |
-          [ -n "$PRIVATE_TOKEN" ] || { echo "secret IMAGE_REPO_TOKEN is not set"; exit 1; }
-          priv=$(GH_TOKEN="$PRIVATE_TOKEN" gh api "repos/$PRIVATE_REPO" --jq .private)
-          [ "$priv" = "true" ] || { echo "$PRIVATE_REPO is not private; refusing"; exit 1; }
+          [ -n "$PRIVATE_TOKEN" ] || { echo "::error::secret IMAGE_REPO_TOKEN is not set in this repo"; exit 1; }
+          if ! priv=$(GH_TOKEN="$PRIVATE_TOKEN" gh api "repos/$PRIVATE_REPO" --jq .private 2>err.txt); then
+            echo "::error::token cannot read $PRIVATE_REPO: $(tr '\n' ' ' < err.txt | cut -c1-200)"; exit 1
+          fi
+          [ "$priv" = "true" ] || { echo "::error::$PRIVATE_REPO is not private; refusing"; exit 1; }
+          # the token must be able to write (create releases)
+          perm=$(GH_TOKEN="$PRIVATE_TOKEN" gh api "repos/$PRIVATE_REPO" --jq '.permissions.push // "unknown"' 2>/dev/null || echo unknown)
+          echo "::notice::token reaches $PRIVATE_REPO (private), push permission: $perm"
           echo "destination $PRIVATE_REPO is private"
       - uses: actions/checkout@v4
       - name: Free disk space
