@@ -8,7 +8,7 @@ iptsd/build/
 setup/build/
 image/out/
 image/work/
-payload/
+/payload/
 *.zip
 .DS_Store
 kext/build-itlwm/

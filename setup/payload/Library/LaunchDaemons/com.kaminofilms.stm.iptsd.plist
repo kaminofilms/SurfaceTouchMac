@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Optional pen helper. Finger touch is processed in the kernel
+     (BigSurface + SurfaceTouchMac); this daemon only contributes pen data. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.kaminofilms.stm.iptsd</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/local/bin/IPTSDaemon</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>10</integer>
+</dict>
+</plist>
