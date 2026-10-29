@@ -61,7 +61,13 @@ for b in "$OUT/BigSurface.kext/Contents/MacOS/BigSurface" "$OUT"/BigSurface.kext
   lipo "$b" -verify_arch x86_64
 done
 # The SurfaceTouchMac code must be inside the HID plugin
-if nm -C "$OUT"/BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext/Contents/MacOS/BigSurfaceHIDDriver | grep -q "kernelTouch"; then
+nm -C "$OUT"/BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext/Contents/MacOS/BigSurfaceHIDDriver > "$OUT/hid-symbols.txt"
+if grep -q "kernelTouch" "$OUT/hid-symbols.txt"; then
+  grep -E "kernelTouch|kernelStylus|HeatmapProcessor|FrameParser" "$OUT/hid-symbols.txt" | awk 'NR<=12'
+  # Kernel code must not reference libc++/floating point runtime helpers
+  if grep -E " U .*(__cxa_throw|_Znwm|__Unwind|sqrt|__extend|__float)" "$OUT/hid-symbols.txt"; then
+    echo "WARN: unexpected runtime symbol references (listed above)"
+  fi
   echo "kernel multitouch symbols present"
 else
   echo "ERROR: SurfaceTouchMac kernel multitouch code missing from BigSurfaceHIDDriver"; exit 1
