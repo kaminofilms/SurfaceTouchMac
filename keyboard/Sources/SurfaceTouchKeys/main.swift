@@ -20,7 +20,7 @@ import TouchKeyboardCore
 // MARK: - Event posting
 
 enum EventPoster {
-    static let source = CGEventSource(stateID: .hidSystemState)
+    static let source = CGEventSource(stateID: .combinedSessionState)   // as TouchKeys
 
     static func type(_ text: String) {
         let utf16 = Array(text.utf16)
@@ -28,7 +28,7 @@ enum EventPoster {
             guard let e = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: down) else { continue }
             e.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
             e.flags = []
-            e.post(tap: .cghidEventTap)
+            e.post(tap: .cgSessionEventTap)
         }
     }
 
@@ -38,11 +38,15 @@ enum EventPoster {
         for down in [true, false] {
             guard let e = CGEvent(keyboardEventSource: source, virtualKey: key.rawValue, keyDown: down) else { continue }
             e.flags = flags
-            e.post(tap: .cghidEventTap)
+            e.post(tap: .cgSessionEventTap)
         }
     }
 
+    /// Number of outputs emitted (used only by the CI self-test; no content is kept).
+    static var emitted = 0
+
     static func emit(_ output: Output) {
+        if output != .none { emitted += 1 }
         switch output {
         case .text(let s): type(s)
         case .special(let k): special(k)

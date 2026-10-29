@@ -109,9 +109,14 @@ enum CISelfTest {
             pump(0.4)
         }
         pump(0.6)
+        report("taps_reached_keys", EventPoster.emitted == 2, "key outputs emitted by taps: \(EventPoster.emitted)")
+        // Post one character directly too, to tell "tap not delivered" apart
+        // from "event posting blocked" if the typed_text check fails.
+        EventPoster.type("!")
+        pump(0.6)
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         report("target_app_keeps_focus", front == "com.apple.TextEdit", "frontmost=\(front ?? "nil")")
-        print("TYPED_EXPECTED hi")
+        print("TYPED_EXPECTED hi!")
         return failures == 0
     }
 

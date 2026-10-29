@@ -25,8 +25,8 @@ sleep 1
 typed=$(osascript -e 'tell application "TextEdit" to get text of front document' 2>/dev/null || echo "")
 if grep -q "accessibility_trusted SKIP" "$LOG"; then
   echo "CHECK typed_text SKIP interactive part not possible on this runner" | tee -a "$LOG"
-elif [ "$typed" = "hi" ]; then
-  echo "CHECK typed_text PASS TextEdit contains 'hi'" | tee -a "$LOG"
+elif [ "$typed" = "hi!" ]; then
+  echo "CHECK typed_text PASS TextEdit contains hi! (2 taps + 1 direct post)" | tee -a "$LOG"
 else
   echo "CHECK typed_text FAIL TextEdit contains '${typed}'" | tee -a "$LOG"
   interactive=1
