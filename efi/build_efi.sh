@@ -32,6 +32,13 @@ rm -rf "$OUT" && mkdir -p "$DL"
 say "== base EFI: ${BASE_EFI_REPO} ${BASE_EFI_TAG}"
 gh release download "$BASE_EFI_TAG" -R "$BASE_EFI_REPO" -D "$DL" --pattern '*'
 ( cd "$DL" && ls -la && shasum -a 256 * ) | tee -a "$REPORT"
+if [ -n "${BASE_EFI_ASSET_SHA256:-}" ]; then
+  if ( cd "$DL" && shasum -a 256 * ) | grep -q "^${BASE_EFI_ASSET_SHA256} "; then
+    say "base EFI asset matches pinned sha256"
+  else
+    say "ERROR: base EFI asset does not match pinned sha256 ${BASE_EFI_ASSET_SHA256}"; exit 1
+  fi
+fi
 mkdir -p "$DL/unz"
 for a in "$DL"/*; do
   [ -f "$a" ] || continue
