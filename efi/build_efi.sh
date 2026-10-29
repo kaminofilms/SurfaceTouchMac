@@ -88,8 +88,24 @@ find "$OUT/EFI/OC" -maxdepth 1 -name 'config*.plist' -delete
 cp "$CONFIG" "$OUT/EFI/OC/config.plist"
 
 # OpenCore version actually bundled
-OCVER="$(strings "$OUT/EFI/OC/OpenCore.efi" | grep -Eo 'REL-[0-9]{3}' | awk 'NR==1' | sed 's/REL-//; s/\(.\)\(.\)\(.\)/\1.\2.\3/' || true)"
-say "bundled OpenCore: ${OCVER:-unknown}"
+OCVER="$(python3 -I - "$OUT/EFI/OC/OpenCore.efi" <<'PY'
+import re, sys
+b = open(sys.argv[1], "rb").read()
+for enc in ("ascii", "utf-16-le"):
+    t = b.decode(enc, "ignore")
+    m = re.search(r"(?:REL|DBG|NOP|MOD)-(\d)(\d)(\d)-\d{4}-\d{2}-\d{2}", t)
+    if m:
+        print(".".join(m.groups()))
+        break
+PY
+)"
+OCVER_SRC="OpenCore.efi version string"
+if [ -z "$OCVER" ]; then
+  # OCmod releases name the OpenCore base in the asset name, e.g. EFI_OCmodr1.0.5_r2.5.0.7z
+  OCVER="$(ls "$DL" | sed -nE 's/.*OCmodr([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | awk 'NR==1')"
+  OCVER_SRC="base asset name (OCmod r${OCVER})"
+fi
+say "bundled OpenCore: ${OCVER:-unknown} (from ${OCVER_SRC})"
 [ -n "$OCVER" ] || { say "cannot determine OpenCore version"; exit 1; }
 
 say "== official OpenCore ${OCVER} utilities (ocvalidate, macserial)"

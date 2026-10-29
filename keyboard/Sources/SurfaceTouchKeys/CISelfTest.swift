@@ -22,9 +22,21 @@ enum CISelfTest {
         fflush(stdout)
     }
 
+    /// Runs the AppKit event loop for `seconds` so synthetic clicks are
+    /// actually dispatched to our windows (RunLoop.run alone does not).
+    static func pump(_ seconds: Double) {
+        let until = Date().addingTimeInterval(seconds)
+        while Date() < until {
+            if let ev = NSApp.nextEvent(matching: .any, until: until, inMode: .default, dequeue: true) {
+                NSApp.sendEvent(ev)
+            }
+        }
+    }
+
     static func run(arguments: [String]) -> Bool {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
+        app.finishLaunching()
         let interactive = arguments.contains("--interactive")
 
         let kb = KeyboardController()
@@ -66,7 +78,7 @@ enum CISelfTest {
         while Date() < deadline {
             textEdit = NSWorkspace.shared.frontmostApplication
             if textEdit?.bundleIdentifier == "com.apple.TextEdit" { break }
-            RunLoop.current.run(until: Date().addingTimeInterval(0.25))
+            pump(0.25)
         }
         guard let te = textEdit, te.bundleIdentifier == "com.apple.TextEdit" else {
             report("textedit_frontmost", false, "frontmost=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "nil")")
@@ -77,12 +89,12 @@ enum CISelfTest {
         // Focus detection (same code path the app uses)
         let watcher = FocusWatcher(keyboard: kb)
         kb.hide()
-        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        pump(0.5)
         watcher.start()
         var shown = false
         let showDeadline = Date().addingTimeInterval(5)
         while Date() < showDeadline && !shown {
-            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            pump(0.2)
             shown = kb.isVisible
         }
         report("auto_show_on_text_focus", shown)
@@ -94,9 +106,9 @@ enum CISelfTest {
             }
             let p = screenCenter(of: kv)
             click(at: p)
-            RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+            pump(0.4)
         }
-        RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+        pump(0.6)
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         report("target_app_keeps_focus", front == "com.apple.TextEdit", "frontmost=\(front ?? "nil")")
         print("TYPED_EXPECTED hi")
