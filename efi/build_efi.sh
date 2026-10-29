@@ -1,0 +1,125 @@
+#!/bin/bash
+# Assembles the Surface Pro 7 OpenCore EFI:
+#   base = balopez83/Surface-Pro-7-Hackintosh release (ACPI patches, config, kexts)
+#   + BigSurface.kext built from source with SurfaceTouchMac kernel multitouch
+#   + SMBIOS fields replaced by placeholders (real values generated per device)
+# then validates it with the *matching* ocvalidate and check_efi.py.
+#
+# macOS runner. Needs: gh (GITHUB_TOKEN), python3, curl, unzip.
+# Inputs:  kext/build/BigSurface.kext (from kext/build_bigsurface.sh)
+# Outputs: efi/build/EFI, efi/build/efi-manifest.json, efi/build/efi-report.txt
+#
+#   build_efi.sh fetch      download + select base EFI, record Lilu/OpenCore versions
+#   build_efi.sh assemble   swap in BigSurface, placeholders, validate
+set -euo pipefail
+MODE="${1:-all}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$HERE/.." && pwd)"
+# shellcheck disable=SC1091
+source "$ROOT/versions.env"
+OUT="$HERE/build"
+DL="$OUT/download"
+REPORT="$OUT/efi-report.txt"
+say() { echo "$*" | tee -a "$REPORT"; }
+if [ "$MODE" = "assemble" ]; then
+  [ -f "$OUT/stage.env" ] || { echo "run '$0 fetch' first"; exit 1; }
+  # shellcheck disable=SC1091
+  source "$OUT/stage.env"
+else
+rm -rf "$OUT" && mkdir -p "$DL"
+: > "$REPORT"
+
+say "== base EFI: ${BASE_EFI_REPO} ${BASE_EFI_TAG}"
+gh release download "$BASE_EFI_TAG" -R "$BASE_EFI_REPO" -D "$DL" --pattern '*'
+( cd "$DL" && shasum -a 256 * | tee -a "$REPORT" )
+for z in "$DL"/*.zip; do unzip -q -o "$z" -d "$DL/unz"; done
+
+say "== config candidates"
+find "$DL/unz" -name '*.plist' -path '*OC*' -maxdepth 6 | grep -i config | tee -a "$REPORT"
+# The OC folder that contains OpenCore.efi
+OCDIR="$(dirname "$(find "$DL/unz" -name OpenCore.efi -path '*/OC/*' | head -1)")"
+[ -d "$OCDIR" ] || { say "no OpenCore.efi found in base release"; exit 1; }
+EFISRC="$(dirname "$OCDIR")"
+say "base EFI folder: ${EFISRC#$DL/unz/}"
+
+# Pick the config: an explicit BASE_CONFIG (path relative to OC/) wins;
+# otherwise there must be exactly one config.plist.
+cfg_count=$(find "$OCDIR" -maxdepth 1 -name 'config*.plist' | wc -l | tr -d ' ')
+if [ -n "${BASE_CONFIG:-}" ]; then
+  CONFIG="$OCDIR/$BASE_CONFIG"
+elif [ "$cfg_count" = "1" ]; then
+  CONFIG="$(find "$OCDIR" -maxdepth 1 -name 'config*.plist')"
+else
+  say "several configs in OC/ and BASE_CONFIG not set; refusing to guess:"
+  ls "$OCDIR" | tee -a "$REPORT"
+  exit 1
+fi
+[ -f "$CONFIG" ] || { say "config $CONFIG missing"; exit 1; }
+say "using config: $(basename "$CONFIG")"
+
+mkdir -p "$OUT/EFI"
+cp -R "$EFISRC/OC" "$EFISRC/BOOT" "$OUT/EFI/"
+# keep only the selected config, named config.plist
+find "$OUT/EFI/OC" -maxdepth 1 -name 'config*.plist' -delete
+cp "$CONFIG" "$OUT/EFI/OC/config.plist"
+
+# OpenCore version actually bundled
+OCVER="$(strings "$OUT/EFI/OC/OpenCore.efi" | grep -Eo 'REL-[0-9]{3}' | head -1 | sed 's/REL-//; s/\(.\)\(.\)\(.\)/\1.\2.\3/')"
+say "bundled OpenCore: ${OCVER:-unknown}"
+[ -n "$OCVER" ] || { say "cannot determine OpenCore version"; exit 1; }
+
+say "== official OpenCore ${OCVER} utilities (ocvalidate, macserial)"
+curl -fsSL -o "$DL/oc.zip" "https://github.com/acidanthera/OpenCorePkg/releases/download/${OCVER}/OpenCore-${OCVER}-RELEASE.zip"
+shasum -a 256 "$DL/oc.zip" | tee -a "$REPORT"
+unzip -q -o "$DL/oc.zip" -d "$DL/oc"
+cp "$DL/oc/Utilities/ocvalidate/ocvalidate" "$OUT/ocvalidate"
+cp "$DL/oc/Utilities/macserial/macserial" "$OUT/macserial"
+chmod +x "$OUT/ocvalidate" "$OUT/macserial"
+# The bundled OpenCore.efi should be the official release binary
+if cmp -s "$DL/oc/X64/EFI/OC/OpenCore.efi" "$OUT/EFI/OC/OpenCore.efi"; then
+  say "OpenCore.efi matches official ${OCVER} RELEASE"
+else
+  say "WARN OpenCore.efi differs from official ${OCVER} RELEASE (DEBUG build or modified)"
+fi
+
+say "== Lilu version in base EFI"
+LILU_VER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$OUT/EFI/OC/Kexts/Lilu.kext/Contents/Info.plist" 2>/dev/null || true)"
+say "Lilu: ${LILU_VER:-not present}"
+{ echo "LILU_VER=${LILU_VER}"; echo "OCVER=${OCVER}"; echo "CONFIG_NAME=$(basename "$CONFIG")"; } > "$OUT/stage.env"
+[ "$MODE" = "fetch" ] && { say "fetch stage done"; exit 0; }
+fi
+CFG="$OUT/EFI/OC/config.plist"
+
+say "== replace BigSurface.kext with SurfaceTouchMac build"
+BS="$ROOT/kext/build/BigSurface.kext"
+if [ -d "$BS" ]; then
+  [ -d "$OUT/EFI/OC/Kexts/BigSurface.kext" ] || { say "base EFI has no BigSurface.kext"; exit 1; }
+  rm -rf "$OUT/EFI/OC/Kexts/BigSurface.kext"
+  cp -R "$BS" "$OUT/EFI/OC/Kexts/BigSurface.kext"
+  # every plugin the config references must exist in the new bundle
+else
+  say "ERROR: $BS not built"; exit 1
+fi
+
+say "== SMBIOS placeholders (generated per device at install time)"
+MODEL="$(/usr/libexec/PlistBuddy -c 'Print :PlatformInfo:Generic:SystemProductName' "$CFG")"
+say "SMBIOS model: $MODEL"
+for k in SystemSerialNumber MLB SystemUUID; do
+  /usr/libexec/PlistBuddy -c "Set :PlatformInfo:Generic:$k STM-PLACEHOLDER" "$CFG"
+done
+plutil -replace PlatformInfo.Generic.ROM -data "AAAAAAAA" "$CFG"
+
+say "== boot-args"
+/usr/libexec/PlistBuddy -c 'Print :NVRAM:Add:7C436110-AB2A-4BBB-A880-FE41995C9F82:boot-args' "$CFG" | tee -a "$REPORT" || true
+
+say "== validation: ocvalidate ${OCVER}"
+"$OUT/ocvalidate" "$CFG" | tee -a "$REPORT"
+say "== validation: check_efi.py"
+python3 -I "$HERE/check_efi.py" "$OUT/EFI" --require-kext BigSurface.kext --require-kext Lilu.kext \
+  --manifest "$OUT/efi-manifest.json" | tee -a "$REPORT"
+test "${PIPESTATUS[0]}" -eq 0
+
+say "== kexts (from manifest)"
+python3 -I -c 'import json,sys; m=json.load(open(sys.argv[1])); [print(f"{k:60s} {v[\"version\"] or \"?\":10s} enabled={v[\"enabled\"]} MaxKernel={v[\"MaxKernel\"] or \"-\"}") for k,v in sorted(m["kexts"].items())]' "$OUT/efi-manifest.json" | tee -a "$REPORT"
+echo "SMBIOS_MODEL=${MODEL}" >> "$OUT/stage.env"
+say "EFI ready: $OUT/EFI"

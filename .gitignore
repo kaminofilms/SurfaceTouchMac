@@ -1,0 +1,13 @@
+kext/build/
+kext/tests/test_processor
+efi/build/
+keyboard/.build/
+keyboard/dist/
+keyboard/dist-tests.log
+iptsd/build/
+setup/build/
+image/out/
+image/work/
+payload/
+*.zip
+.DS_Store

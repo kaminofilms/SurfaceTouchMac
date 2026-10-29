@@ -1,0 +1,101 @@
+# Public build: everything that is open source (no Apple software).
+# Produces the "payload" release used by the private image build.
+name: payload
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Kernel multitouch processor tests (ASan/UBSan, fuzz)
+        run: make -C kext/tests test kernel-check CXX=clang++
+      - name: EFI checker tests
+        run: python3 -I efi/test_check_efi.py
+      - name: Patch applies to pinned upstream
+        run: |
+          source versions.env
+          git clone -q https://github.com/Xiashangning/BigSurfaceHIDDriver.git /tmp/hid
+          git -C /tmp/hid checkout -q "$BIGSURFACEHID_COMMIT"
+          git -C /tmp/hid apply --check "$PWD/kext/patches/0001-BigSurfaceHIDDriver-kernel-multitouch.patch"
+          echo "patch applies cleanly"
+      - name: Shell syntax
+        run: for f in $(git ls-files '*.sh') setup/scripts/preinstall setup/scripts/postinstall; do bash -n "$f" && echo "ok $f"; done
+
+  macos-build:
+    # Native Intel runner = same CPU architecture as the Surface Pro 7
+    runs-on: macos-15-intel
+    needs: host-tests
+    env:
+      GH_TOKEN: ${{ github.token }}
+      STM_VERSION: 0.1.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          sw_vers; uname -m; xcodebuild -version; swift --version
+          echo "Rosetta not needed: native x86_64 runner"
+      - name: Base EFI (fetch + versions)
+        run: bash efi/build_efi.sh fetch
+      - name: Build BigSurface.kext with kernel multitouch
+        run: |
+          source efi/build/stage.env
+          export LILU_VER
+          bash kext/build_bigsurface.sh
+      - name: Assemble + validate EFI (ocvalidate, check_efi)
+        run: bash efi/build_efi.sh assemble
+      - name: Keyboard + setup tool unit tests
+        working-directory: keyboard
+        run: swift test 2>&1 | tee dist-tests.log
+      - name: Build keyboard app and stm-setup (x86_64 + arm64, ad-hoc signed)
+        run: bash keyboard/build.sh
+      - name: Keyboard runtime checks
+        run: bash keyboard/ci/keyboard-ci.sh
+      - name: Pen helper (IPTSDaemon)
+        continue-on-error: true
+        run: bash iptsd/build_iptsd.sh
+      - name: Installer package
+        run: bash setup/build_pkg.sh
+      - name: stm-setup refuses on non-Surface hardware (safety check on the runner)
+        run: |
+          set +e
+          keyboard/dist/stm-setup check-hardware; rc=$?
+          echo "exit=$rc"
+          test "$rc" -eq 2
+          keyboard/dist/stm-setup install-efi --source efi/build --dry-run; rc=$?
+          echo "exit=$rc"
+          test "$rc" -eq 2
+      - name: Collect payload
+        run: |
+          P=payload
+          rm -rf $P && mkdir -p $P/logs
+          cp -R efi/build/EFI $P/
+          cp efi/build/ocvalidate efi/build/macserial $P/
+          cp setup/build/SurfaceTouchMac-Setup.pkg $P/
+          cp efi/build/efi-report.txt efi/build/efi-manifest.json $P/logs/
+          cp kext/build/xcodebuild.log $P/logs/bigsurface-xcodebuild.log
+          cp keyboard/dist/keyboard-ci.log keyboard/dist-tests.log $P/logs/ 2>/dev/null || true
+          ( cd $P && find . -type f ! -name SHA256SUMS.txt -exec shasum -a 256 {} + | sort -k2 > SHA256SUMS.txt )
+          ditto -c -k --keepParent $P SurfaceTouchMac-payload.zip
+          shasum -a 256 SurfaceTouchMac-payload.zip | tee SurfaceTouchMac-payload.zip.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SurfaceTouchMac-payload
+          path: |
+            SurfaceTouchMac-payload.zip
+            SurfaceTouchMac-payload.zip.sha256
+      - name: Publish payload release (open-source parts only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          TAG=payload-latest
+          gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" SurfaceTouchMac-payload.zip SurfaceTouchMac-payload.zip.sha256 \
+            --title "Payload ${STM_VERSION} (${GITHUB_SHA::7})" --prerelease \
+            --notes "Open-source parts only (OpenCore EFI for Surface Pro 7 with SMBIOS placeholders, BigSurface with kernel multitouch, SurfaceTouchKeys, setup package). No Apple software. Not tested on a physical Surface by CI."

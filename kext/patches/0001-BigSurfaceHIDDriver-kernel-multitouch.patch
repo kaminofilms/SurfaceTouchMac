@@ -1,0 +1,283 @@
+diff --git a/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.cpp b/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.cpp
+index 6629396..860dce1 100644
+--- a/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.cpp
++++ b/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.cpp
+@@ -8,6 +8,7 @@
+ 
+ #include "IntelPreciseTouchStylusDriver.hpp"
+ #include "SurfaceTouchScreenDevice.hpp"
++#include <pexpert/pexpert.h>
+ 
+ #define IPTS_BUSY_TIMEOUT       5
+ #define IPTS_ACTIVE_TIMEOUT     10
+@@ -16,6 +17,101 @@
+ #define super IOService
+ OSDefineMetaClassAndStructors(IntelPreciseTouchStylusDriver, IOService)
+ 
++// ---------------------------------------------------------------------------
++// SurfaceTouchMac: in-kernel multitouch processing
++//
++// Stock BigSurface only switches the digitizer into multitouch (heatmap) mode
++// once the user-space IPTSDaemon connects, so the macOS installer, Setup
++// Assistant, Recovery and the login window only get single touch. With this
++// change the kext processes heatmaps itself from the moment it starts.
++// IPTSDaemon may still connect after boot; it then only supplies pen reports
++// (finger reports from the daemon are dropped so there are never two
++// competing finger translators producing duplicate clicks).
++//
++// Boot-args (OpenCore NVRAM, no rebuild needed):
++//   -stmnokproc        disable kernel processing (stock BigSurface behaviour)
++//   stmorient=<n>      bit0 invert X, bit1 invert Y, bit2 swap X/Y
++//   stmpalm=0          disable palm rejection
++//   stmpenblock=0      allow finger touches while the pen is in range
++// ---------------------------------------------------------------------------
++
++void IPTSKernelSink::onTouch(const stm::TouchFrame &f) {
++    if (driver) driver->kernelTouch(f);
++}
++
++void IPTSKernelSink::onStylus(const stm::StylusFrame &s) {
++    if (driver) driver->kernelStylus(s);
++}
++
++void IntelPreciseTouchStylusDriver::loadKernelProcessingConfig() {
++    int dummy = 0;
++    if (PE_parse_boot_argn("-stmnokproc", &dummy, sizeof(dummy)))
++        kernel_processing = false;
++    if (!kernel_processing)
++        return;
++    stm::ProcessorConfig cfg = stm::defaultConfig();
++    UInt32 orient = 0;
++    if (PE_parse_boot_argn("stmorient", &orient, sizeof(orient))) {
++        cfg.invert_x = orient & 0x1;
++        cfg.invert_y = orient & 0x2;
++        cfg.swap_xy  = orient & 0x4;
++    }
++    UInt32 flag = 1;
++    if (PE_parse_boot_argn("stmpalm", &flag, sizeof(flag)))
++        cfg.palm_rejection = flag != 0;
++    flag = 1;
++    if (PE_parse_boot_argn("stmpenblock", &flag, sizeof(flag)))
++        cfg.reject_touch_while_pen = flag != 0;
++    kproc->setConfig(cfg);
++}
++
++void IntelPreciseTouchStylusDriver::sendKernelReport(const IPTSHIDReport *report, UInt32 size) {
++    if (!kernel_report || !touch_screen || !touch_screen_started)
++        return;
++    kernel_report->setLength(size);
++    kernel_report->writeBytes(0, report, size);
++    touch_screen->handleReport(kernel_report);
++}
++
++void IntelPreciseTouchStylusDriver::kernelTouch(const stm::TouchFrame &f) {
++    IPTSHIDReport report;
++    memset(&report, 0, sizeof(report));
++    report.report_id = IPTS_TOUCH_REPORT_ID;
++    UInt8 n = f.count > IPTS_TOUCH_SCREEN_FINGER_CNT ? IPTS_TOUCH_SCREEN_FINGER_CNT : f.count;
++    for (UInt8 i = 0; i < n; i++) {
++        report.report.touch.fingers[i].touch = f.fingers[i].touch;
++        report.report.touch.fingers[i].contact_id = f.fingers[i].id;
++        report.report.touch.fingers[i].x = f.fingers[i].x;
++        report.report.touch.fingers[i].y = f.fingers[i].y;
++    }
++    report.report.touch.contact_num = n;
++    sendKernelReport(&report, sizeof(IPTSTouchHIDReport) + 1);
++}
++
++void IntelPreciseTouchStylusDriver::kernelStylus(const stm::StylusFrame &s) {
++    if (daemon_attached)    // daemon owns the pen while connected
++        return;
++    IPTSHIDReport report;
++    memset(&report, 0, sizeof(report));
++    report.report_id = IPTS_STYLUS_REPORT_ID;
++    report.report.stylus.in_range = s.in_range;
++    report.report.stylus.touch = s.touch;
++    report.report.stylus.side_button = s.touch && s.button;
++    report.report.stylus.inverted = s.rubber;
++    report.report.stylus.eraser = s.rubber;
++    report.report.stylus.x = s.x;
++    report.report.stylus.y = s.y;
++    report.report.stylus.tip_pressure = s.pressure;
++    report.report.stylus.scan_time = s.timestamp;
++    sendKernelReport(&report, sizeof(IPTSStylusHIDReport) + 1);
++}
++
++void IntelPreciseTouchStylusDriver::setDeviceMultitouch(bool enable) {
++    multitouch = enable;
++    if (status_interrupt)
++        status_interrupt->interruptOccurred(nullptr, this, 0);
++}
++
+ IOService* IntelPreciseTouchStylusDriver::probe(IOService* provider, SInt32* score) {
+     if (!super::probe(provider, score))
+         return nullptr;
+@@ -79,6 +175,21 @@ bool IntelPreciseTouchStylusDriver::start(IOService *provider) {
+         goto exit;
+     }
+     
++    // SurfaceTouchMac: in-kernel multitouch
++    kernel_report = IOBufferMemoryDescriptor::withCapacity(sizeof(IPTSHIDReport), kIODirectionNone);
++    kproc = new stm::HeatmapProcessor;
++    if (kproc)
++        kparser = new stm::FrameParser(*kproc);
++    if (!kernel_report || !kproc || !kparser) {
++        LOG("SurfaceTouchMac: could not allocate kernel processor, using stock behaviour");
++        kernel_processing = false;
++    } else {
++        ksink.driver = this;
++        loadKernelProcessingConfig();
++    }
++    multitouch = kernel_processing;
++    LOG("SurfaceTouchMac: kernel multitouch %s", kernel_processing ? "enabled" : "disabled");
++    
+     if (api->registerMessageHandler(this, OSMemberFunctionCast(SurfaceManagementEngineClient::MessageHandler, this, &IntelPreciseTouchStylusDriver::handleMessage)) != kIOReturnSuccess) {
+         LOG("Failed to register receive handler");
+         goto exit;
+@@ -127,6 +238,8 @@ IOReturn IntelPreciseTouchStylusDriver::setPowerState(unsigned long whichState,
+                 IOSleep(25);
+             }
+             current_doorbell = 0;
++            if (kproc)
++                kproc->reset();     // no stale contacts after wake
+             DBG_LOG("Going to sleep");
+         }
+     } else {
+@@ -151,6 +264,10 @@ IOReturn IntelPreciseTouchStylusDriver::setPowerState(unsigned long whichState,
+ 
+ void IntelPreciseTouchStylusDriver::releaseResources() {
+     api->unregisterMessageHandler(this);
++    ksink.driver = nullptr;
++    if (kparser) { delete kparser; kparser = nullptr; }
++    if (kproc) { delete kproc; kproc = nullptr; }
++    OSSafeReleaseNULL(kernel_report);
+     if (timer) {
+         timer->cancelTimeout();
+         timer->disable();
+@@ -244,14 +361,20 @@ IOReturn IntelPreciseTouchStylusDriver::waitInput(UInt64 *size) {
+ 
+ void IntelPreciseTouchStylusDriver::enterMultitouch() {
+     DBG_LOG("Multitouch processing daemon attached, enabling multitouch...");
+-    multitouch = true;
+-    status_interrupt->interruptOccurred(nullptr, this, 0);
++    daemon_attached = true;
++    if (!multitouch)
++        setDeviceMultitouch(true);
+ }
+ 
+ void IntelPreciseTouchStylusDriver::exitMultitouch() {
++    daemon_attached = false;
++    daemon_processing = false;
++    if (kernel_processing) {
++        DBG_LOG("Daemon detached, kernel multitouch continues");
++        return;
++    }
+     DBG_LOG("Returning to single touch...");
+-    multitouch = false;
+-    status_interrupt->interruptOccurred(nullptr, this, 0);
++    setDeviceMultitouch(false);
+ }
+ 
+ void IntelPreciseTouchStylusDriver::processingStarted() {
+@@ -276,6 +399,8 @@ void IntelPreciseTouchStylusDriver::handleInterruptStatus(IOInterruptEventSource
+ 
+ IOReturn IntelPreciseTouchStylusDriver::handleHIDReportGated(IPTSHIDReport *report) {
+     UInt32 report_size = 0;
++    if (kernel_processing && report->report_id == IPTS_TOUCH_REPORT_ID)
++        return kIOReturnSuccess;    // kernel owns finger input (no duplicate clicks)
+     switch (report->report_id) {
+         case IPTS_TOUCH_REPORT_ID:
+             report_size = sizeof(IPTSTouchHIDReport)+1;
+@@ -332,8 +457,10 @@ void IntelPreciseTouchStylusDriver::pollTouchData(IOTimerEventSource *sender) {
+         if (header->size != 0) {
+             switch (header->type) {
+                 case IPTSDataTypeFrame:
++                    if (kernel_processing)
++                        kparser->parseRawPayload(header->data, header->size, ksink);
+                     // fake a hid report
+-                    if (!daemon_processing) {
++                    if ((!kernel_processing || daemon_attached) && !daemon_processing) {
+                         UInt8 *temp = reinterpret_cast<UInt8 *>(input_buffer->getBytesNoCopy());
+                         IPTSHIDHeader *h = reinterpret_cast<IPTSHIDHeader *>(temp+3);
+                         h->type = IPTS_HID_FRAME_TYPE_RAW;
+@@ -355,8 +482,10 @@ void IntelPreciseTouchStylusDriver::pollTouchData(IOTimerEventSource *sender) {
+                         sent = false;
+                         report_interrupt->interruptOccurred(nullptr, this, 0);
+                     } else if (IPTS_HID_REPORT_IS_TOUCH(header->data[0])) {
++                        if (kernel_processing)
++                            kparser->parse(header->data, header->size, ksink);
+                         // call userspace daemon to process multitouch heatmap & stylus data
+-                        if (!daemon_processing) {    // if the userspace daemon has finished processing
++                        if ((!kernel_processing || daemon_attached) && !daemon_processing) {    // if the userspace daemon has finished processing
+                             input_buffer->writeBytes(0, header->data, header->size);
+                             input_size = header->size;
+                             daemon_handled = false;
+@@ -603,6 +732,10 @@ void IntelPreciseTouchStylusDriver::handleMessage(SurfaceManagementEngineClient
+             
+             LOG("IPTS Device is ready");
+             state = IPTSDeviceStateStarted;
++            // SurfaceTouchMac: the digitizer falls back to single touch after
++            // a reset or wake, so re-send the mode every time it is ready.
++            if (multitouch)
++                status_interrupt->interruptOccurred(nullptr, this, 0);
+             
+             if (mode == IPTSModeDoorbell) {
+                 timer->enable();
+diff --git a/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.hpp b/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.hpp
+index b8ba675..9b94233 100644
+--- a/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.hpp
++++ b/BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.hpp
+@@ -11,6 +11,8 @@
+ 
+ #include "../../../../BigSurface/BigSurface/SurfaceManagementEngine/SurfaceManagementEngineClient.hpp"
+ #include "IPTSProtocol.h"
++#include "IPTSKenerlUserShared.h"
++#include "IPTSKernelProcessor.hpp"
+ 
+ enum IPTSDeviceState {
+     IPTSDeviceStateStarting,
+@@ -28,6 +30,15 @@ struct IPTSBufferInfo {
+ };
+ 
+ class SurfaceTouchScreenDevice;
++class IntelPreciseTouchStylusDriver;
++
++// SurfaceTouchMac: receives contacts from the in-kernel processor
++class IPTSKernelSink : public stm::FrameParser::Sink {
++public:
++    IntelPreciseTouchStylusDriver *driver {nullptr};
++    void onTouch(const stm::TouchFrame &f) override;
++    void onStylus(const stm::StylusFrame &s) override;
++};
+ 
+ class EXPORT IntelPreciseTouchStylusDriver : public IOService {
+     OSDeclareDefaultStructors(IntelPreciseTouchStylusDriver);
+@@ -55,6 +66,10 @@ public:
+     void processingStarted();
+     void processingEnded();
+     
++    // SurfaceTouchMac in-kernel multitouch
++    void kernelTouch(const stm::TouchFrame &f);
++    void kernelStylus(const stm::StylusFrame &s);
++    
+ private:
+     SurfaceManagementEngineClient*  api {nullptr};
+     
+@@ -92,6 +107,17 @@ private:
+     IOBufferMemoryDescriptor *report_to_send {nullptr};
+     bool sent {true};
+     
++    // SurfaceTouchMac in-kernel multitouch
++    bool kernel_processing {true};      // disabled with boot-arg -stmnokproc
++    bool daemon_attached {false};       // IPTSDaemon connected (handles DFT pen only)
++    stm::HeatmapProcessor *kproc {nullptr};
++    stm::FrameParser *kparser {nullptr};
++    IPTSKernelSink ksink;
++    IOBufferMemoryDescriptor *kernel_report {nullptr};
++    void loadKernelProcessingConfig();
++    void sendKernelReport(const IPTSHIDReport *report, UInt32 size);
++    void setDeviceMultitouch(bool enable);
++
+     IPTSBufferInfo rx_buffer[IPTS_BUFFER_NUM];
+     IPTSBufferInfo feedback_buffer[IPTS_BUFFER_NUM];
+     IPTSBufferInfo doorbell_buffer;

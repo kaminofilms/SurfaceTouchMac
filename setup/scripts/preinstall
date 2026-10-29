@@ -1,0 +1,19 @@
+#!/bin/bash
+# SurfaceTouchMac setup - preinstall (runs as root BEFORE anything is copied).
+# Refuses to install unless this is a Surface Pro 7 and the internal SSD's EFI
+# partition can be identified without any ambiguity. Nothing is changed here.
+set -u
+LOG=/Library/Logs/SurfaceTouchMac-setup.log
+exec >>"$LOG" 2>&1
+echo "=== $(date '+%Y-%m-%d %H:%M:%S') SurfaceTouchMac preinstall"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if ! "$DIR/stm-setup" check-hardware; then
+  echo "STOP: this Mac is not a supported Surface Pro 7. Nothing was changed."
+  exit 1
+fi
+if ! "$DIR/stm-setup" plan-efi; then
+  echo "STOP: could not identify the internal SSD's EFI partition safely. Nothing was changed."
+  exit 1
+fi
+exit 0

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>info</key>
+	<dict>
+		<key>/</key>
+		<dict>
+			<key>APFSContainerReference</key>
+			<string>disk3</string>
+			<key>APFSPhysicalStores</key>
+			<array>
+				<dict>
+					<key>APFSPhysicalStore</key>
+					<string>disk0s2</string>
+				</dict>
+				<dict>
+					<key>APFSPhysicalStore</key>
+					<string>disk1s2</string>
+				</dict>
+			</array>
+			<key>DeviceIdentifier</key>
+			<string>disk3s1s1</string>
+			<key>FilesystemType</key>
+			<string>apfs</string>
+			<key>MountPoint</key>
+			<string>/</string>
+		</dict>
+		<key>disk0</key>
+		<dict>
+			<key>BusProtocol</key>
+			<string>PCI-Express</string>
+			<key>Content</key>
+			<string>GUID_partition_scheme</string>
+			<key>DeviceIdentifier</key>
+			<string>disk0</string>
+			<key>DeviceNode</key>
+			<string>/dev/disk0</string>
+			<key>Ejectable</key>
+			<false/>
+			<key>Internal</key>
+			<true/>
+			<key>MediaName</key>
+			<string>KBG40ZPZ256G TOSHIBA MEMORY</string>
+			<key>ParentWholeDisk</key>
+			<string>disk0</string>
+			<key>Removable</key>
+			<false/>
+			<key>RemovableMediaOrExternalDevice</key>
+			<false/>
+			<key>SolidState</key>
+			<true/>
+			<key>TotalSize</key>
+			<integer>256060514304</integer>
+			<key>VirtualOrPhysical</key>
+			<string>Physical</string>
+			<key>WholeDisk</key>
+			<true/>
+		</dict>
+	</dict>
+	<key>list</key>
+	<dict/>
+	<key>wholeDisks</key>
+	<array>
+		<string>disk0</string>
+	</array>
+</dict>
+</plist>

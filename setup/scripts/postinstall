@@ -1,0 +1,75 @@
+#!/bin/bash
+# SurfaceTouchMac setup - postinstall (runs as root after the payload is copied)
+#
+#  1. writes this Mac's SMBIOS identity (the one it booted with) into the
+#     OpenCore config, so iCloud/iMessage identity stays the same
+#  2. installs OpenCore onto the INTERNAL SSD's EFI partition (stm-setup does
+#     the hardware + disk checks again and backs up the old EFI first)
+#  3. installs the pen helper daemon if present
+#  4. starts the on-screen keyboard for the logged-in user and opens the
+#     Lock Screen settings page for the one login-window checkbox
+#
+# It never reads or stores passwords, never edits the TCC database, never
+# disables SIP/FileVault and never enables automatic login.
+set -u
+LOG=/Library/Logs/SurfaceTouchMac-setup.log
+exec >>"$LOG" 2>&1
+echo "=== $(date '+%Y-%m-%d %H:%M:%S') SurfaceTouchMac postinstall"
+DIR="$(cd "$(dirname "$0")" && pwd)"
+STM=/Library/SurfaceTouchMac
+WORK="$(mktemp -d /private/tmp/stm.XXXXXX)"
+trap 'rm -rf "$WORK"' EXIT
+PB=/usr/libexec/PlistBuddy
+
+fail() { echo "FAILED: $*"; exit 1; }
+
+# ---------------------------------------------------------------- 1. SMBIOS
+cp -R "$STM/EFI" "$WORK/EFI" || fail "EFI payload missing"
+CFG="$WORK/EFI/OC/config.plist"
+
+running_serial="$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F'"' '/IOPlatformSerialNumber/{print $4}')"
+running_uuid="$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F'"' '/IOPlatformUUID/{print $4}')"
+running_mlb="$(nvram 4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14:MLB 2>/dev/null | awk '{print $2}')"
+rom_hex="$(nvram -x 4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14:ROM 2>/dev/null | plutil -extract 4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14:ROM raw -o - - 2>/dev/null || true)"
+
+if [ -n "$running_serial" ] && [ "$running_serial" != "STM-PLACEHOLDER" ] && [ -n "$running_mlb" ] && [ -n "$running_uuid" ]; then
+  echo "SMBIOS: reusing the identity this Mac booted with (serial ending ${running_serial: -4})"
+  $PB -c "Set :PlatformInfo:Generic:SystemSerialNumber $running_serial" "$CFG"
+  $PB -c "Set :PlatformInfo:Generic:MLB $running_mlb" "$CFG"
+  $PB -c "Set :PlatformInfo:Generic:SystemUUID $running_uuid" "$CFG"
+  [ -n "$rom_hex" ] && plutil -replace PlatformInfo.Generic.ROM -data "$rom_hex" "$CFG"
+else
+  model="$($PB -c 'Print :PlatformInfo:Generic:SystemProductName' "$CFG")"
+  echo "SMBIOS: generating a new identity for $model"
+  line="$("$STM/bin/macserial" -m "$model" -n 1 | head -1)"
+  serial="$(echo "$line" | awk -F' \\| ' '{print $1}' | tr -d ' ')"
+  mlb="$(echo "$line" | awk -F' \\| ' '{print $2}' | tr -d ' ')"
+  [ -n "$serial" ] && [ -n "$mlb" ] || fail "macserial produced no serial"
+  $PB -c "Set :PlatformInfo:Generic:SystemSerialNumber $serial" "$CFG"
+  $PB -c "Set :PlatformInfo:Generic:MLB $mlb" "$CFG"
+  $PB -c "Set :PlatformInfo:Generic:SystemUUID $(uuidgen)" "$CFG"
+  plutil -replace PlatformInfo.Generic.ROM -data "$(head -c 6 /dev/urandom | base64)" "$CFG"
+fi
+if grep -q STM-PLACEHOLDER "$CFG"; then fail "SMBIOS placeholders left in config"; fi
+
+# ---------------------------------------------------------------- 2. EFI
+"$STM/bin/stm-setup" install-efi --source "$WORK" || fail "OpenCore was not installed to the internal SSD (see messages above)"
+
+# ---------------------------------------------------------------- 3. pen helper
+if [ -x /usr/local/bin/IPTSDaemon ] && [ -f /Library/LaunchDaemons/com.kaminofilms.stm.iptsd.plist ]; then
+  launchctl bootout system/com.kaminofilms.stm.iptsd 2>/dev/null || true
+  launchctl bootstrap system /Library/LaunchDaemons/com.kaminofilms.stm.iptsd.plist && echo "pen helper started"
+fi
+
+# ---------------------------------------------------------------- 4. keyboard
+user="$(stat -f%Su /dev/console)"
+if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
+  uid="$(id -u "$user")"
+  launchctl bootout "gui/$uid/com.kaminofilms.surfacetouchkeys" 2>/dev/null || true
+  launchctl bootstrap "gui/$uid" /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist && echo "keyboard started for $user"
+  # The login-window keyboard is one checkbox Apple only exposes in System Settings.
+  launchctl asuser "$uid" sudo -u "$user" open "x-apple.systempreferences:com.apple.Lock-Screen-Settings.extension" || true
+  launchctl asuser "$uid" sudo -u "$user" osascript -e 'display dialog "Surface setup is done. Two things only you can do:\n\n1. In the window that opened (Lock Screen), click \"Accessibility Options…\" and turn on \"Accessibility Keyboard\" so a keyboard appears at the login screen.\n\n2. When asked, allow SurfaceTouchKeys in Privacy & Security › Accessibility so the keyboard can open by itself and type.\n\nYou can now remove the USB drive." buttons {"OK"} default button 1 with title "SurfaceTouchMac"' >/dev/null 2>&1 || true
+fi
+echo "postinstall finished"
+exit 0

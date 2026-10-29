@@ -1,0 +1,90 @@
+SURFACETOUCHMAC - INSTALLING macOS ON YOUR SURFACE PRO 7
+=========================================================
+
+Touch: finger multi-touch works from the first boot (macOS installer, Setup
+Assistant, login window, desktop). It does NOT work in the OpenCore boot menu,
+the FileVault unlock screen or the firmware (UEFI) menus. Keep the Type Cover
+attached for those, or just wait: OpenCore picks the right entry by itself.
+
+1. BOOT FROM THE USB
+   - Shut the Surface down. Plug in the USB drive.
+   - Hold VOLUME DOWN, press and release POWER, keep holding VOLUME DOWN until
+     the boot screen appears.
+   - (If the Surface refuses: in UEFI settings, Security -> Secure Boot ->
+     "Microsoft & 3rd party CA" or Disabled. Boot configuration: move USB to the top.)
+   - OpenCore starts "Install macOS Tahoe" after a few seconds.
+
+2. ERASE THE INTERNAL SSD (this deletes Windows/macOS and all files on it)
+   - In the installer choose Disk Utility.
+   - View -> Show All Devices.
+   - Select the INTERNAL disk (the ~128/256/512 GB/1 TB NVMe device; it is the
+     one that is NOT the USB drive and NOT the SD card).
+   - Erase -> Name: Macintosh HD, Format: APFS, Scheme: GUID Partition Map.
+   - Close Disk Utility.
+   Apple's installer has no supported way for anyone else to pick and erase
+   the disk for you, so this step is yours.
+
+3. INSTALL macOS
+   - Choose "Install macOS Tahoe", accept Apple's licence (yours to accept),
+     choose "Macintosh HD".
+   - The Surface restarts several times. OpenCore continues automatically
+     ("macOS Installer", then "Macintosh HD"). Leave the USB plugged in.
+
+4. SETUP ASSISTANT
+   - Answer the questions (language, Wi-Fi, account, password).
+   - FileVault: choose whether you want disk encryption. If you turn it on,
+     the password you type right after a full restart is entered on an unlock
+     screen where touch does not work (use the Type Cover there). If you leave
+     it off, you go straight to the normal login screen, which has touch.
+   - You can sign in with your Apple ID now; the identity is kept in step 5.
+
+5. RUN SURFACE SETUP (one time)
+   - Open the "SURFACESETUP" disk on the desktop / in Finder.
+   - Right-click (long-press) SurfaceTouchMac-Setup.pkg -> Open -> Open.
+     (It is not notarized by Apple, so macOS asks you to confirm. If it is
+     blocked: System Settings -> Privacy & Security -> "Open Anyway".)
+   - Enter your password when asked. The installer:
+       * checks this is a Surface Pro 7 and finds the internal SSD's EFI
+         partition (it stops without changing anything if unsure),
+       * backs up the old EFI to /Library/SurfaceTouchMac/Backups,
+       * installs OpenCore to the internal SSD so the USB is no longer needed,
+       * installs the SurfaceTouchKeys on-screen keyboard and starts it.
+
+6. TWO SWITCHES ONLY YOU CAN TURN ON (macOS requires a person to do these)
+   a) Accessibility for the keyboard: when macOS asks, open Privacy &
+      Security -> Accessibility and switch on "SurfaceTouchKeys".
+      Then the keyboard opens by itself when you tap a text field.
+   b) Keyboard at the login screen: System Settings -> Lock Screen ->
+      "Accessibility Options..." -> turn on "Accessibility Keyboard".
+      (The setup opens this page for you.)
+
+7. REMOVE THE USB AND RESTART
+   - The Surface now boots OpenCore from the internal SSD.
+   - If it boots Windows Boot Manager or nothing: UEFI settings -> Boot
+     configuration -> put "OpenCore"/the internal drive first.
+
+KEYBOARD
+   - Opens automatically in text fields, search fields, text areas and most
+     browser inputs; hides when you leave the field.
+   - The round keyboard button (bottom right) shows/hides it manually; there
+     is also a keyboard icon in the menu bar.
+   - Hold Backspace or the arrows to repeat.
+   - Some custom-drawn or protected fields may not be detected; use the button.
+
+GESTURES (from BigSurface + VoodooInput, macOS sees a trackpad-like device)
+   tap = click, tap-tap = double-click, hold ~1 s = right-click,
+   drag = select/move, two fingers = scroll / pinch zoom,
+   three/four fingers = Mission Control / switch Spaces (trackpad gestures).
+
+IF TOUCH IS MIRRORED OR ROTATED
+   Add one of these to boot-args in EFI/OC/config.plist
+   (NVRAM -> Add -> 7C436110-AB2A-4BBB-A880-FE41995C9F82 -> boot-args):
+   stmorient=1 (flip X), stmorient=2 (flip Y), stmorient=4 (swap X/Y),
+   stmorient=3 (flip both). To go back to stock BigSurface behaviour: -stmnokproc
+
+KNOWN LIMITS
+   No cameras (Intel IPU4 has no macOS or Linux driver). Some users of the
+   BigSurface kext report occasional overheating; Low Power Mode helps.
+   AirDrop/Handoff need Apple wireless hardware.
+
+Log of the setup: /Library/Logs/SurfaceTouchMac-setup.log

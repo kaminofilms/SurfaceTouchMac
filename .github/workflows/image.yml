@@ -1,0 +1,55 @@
+# PRIVATE build: adds Apple's macOS installer to the payload and produces the
+# bootable USB image. Runs only in a private repository, because the image
+# contains Apple software that must not be published.
+name: image
+
+on:
+  workflow_dispatch:
+    inputs:
+      payload_repo:
+        description: Public repo with the payload-latest release
+        default: kaminofilms/surfacetouchmac
+
+permissions:
+  contents: write
+
+jobs:
+  image:
+    if: github.event.repository.private == true
+    runs-on: macos-15
+    timeout-minutes: 300
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Build scripts come from the public repo; this private repo only needs
+      # this workflow file.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.payload_repo }}
+      - name: Free disk space
+        run: |
+          df -h /
+          for x in /Applications/Xcode_*.app; do [ "$x" != "$(xcode-select -p | sed 's|/Contents/Developer||')" ] && sudo rm -rf "$x" & done; wait
+          sudo rm -rf ~/Library/Android /usr/local/share/dotnet /Users/runner/hostedtoolcache || true
+          df -h /
+      - name: Payload
+        run: |
+          gh release download payload-latest -R "${{ inputs.payload_repo }}" -p 'SurfaceTouchMac-payload.zip*'
+          shasum -a 256 -c SurfaceTouchMac-payload.zip.sha256
+          ditto -x -k SurfaceTouchMac-payload.zip .
+          ( cd payload && shasum -a 256 -c SHA256SUMS.txt )
+      - name: Build image (Apple installer + OpenCore + setup package)
+        run: PAYLOAD_DIR="$PWD/payload" bash image/build_image.sh
+      - name: Join scripts + docs
+        run: |
+          cp docs/JOIN-AND-FLASH.md image/out/
+          cp image/join/* image/out/
+          cp payload/logs/* image/out/ 2>/dev/null || true
+      - name: Private release
+        run: |
+          TAG="image-$(python3 -c 'import json;print(json.load(open("image/out/image-info.json"))["macos_version"])')-${GITHUB_RUN_NUMBER}"
+          # -R: publish to THIS private repo, never the public one checked out above
+          gh release create "$TAG" -R "${{ github.repository }}" --title "$TAG" --prerelease \
+            --notes "Private: contains Apple macOS. Do not redistribute. See JOIN-AND-FLASH.md." \
+            image/out/*
+          echo "release: $TAG"
