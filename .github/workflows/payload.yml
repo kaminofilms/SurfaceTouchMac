@@ -53,6 +53,8 @@ jobs:
           source efi/build/stage.env
           export LILU_VER VSMC_VER
           bash kext/build_bigsurface.sh
+      - name: Build AirportItlwm for Tahoe (laobamac/itlwm)
+        run: bash kext/build_itlwm.sh
       - name: Assemble + validate EFI (ocvalidate, check_efi)
         run: bash efi/build_efi.sh assemble
       - name: Keyboard + setup tool unit tests
@@ -95,6 +97,7 @@ jobs:
         run: |
           mkdir -p ci-logs && cd ci-logs
           for f in ../efi/build/efi-report.txt ../efi/build/efi-manifest.json ../kext/build/xcodebuild.log \
+                   ../efi/build/bigsurface-compare.txt ../kext/build-itlwm/xcodebuild.log \
                    ../keyboard/dist/keyboard-ci.log ../keyboard/dist-tests.log ../setup/build/distribution.xml; do
             [ -f "$f" ] && cp "$f" . || true
           done

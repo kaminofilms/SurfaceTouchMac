@@ -134,14 +134,21 @@ CFG="$OUT/EFI/OC/config.plist"
 
 say "== replace BigSurface.kext with SurfaceTouchMac build"
 BS="$ROOT/kext/build/BigSurface.kext"
-if [ -d "$BS" ]; then
-  [ -d "$OUT/EFI/OC/Kexts/BigSurface.kext" ] || { say "base EFI has no BigSurface.kext"; exit 1; }
-  rm -rf "$OUT/EFI/OC/Kexts/BigSurface.kext"
-  cp -R "$BS" "$OUT/EFI/OC/Kexts/BigSurface.kext"
-  # every plugin the config references must exist in the new bundle
-else
-  say "ERROR: $BS not built"; exit 1
+[ -d "$BS" ] || { say "ERROR: $BS not built"; exit 1; }
+[ -d "$OUT/EFI/OC/Kexts/BigSurface.kext" ] || { say "base EFI has no BigSurface.kext"; exit 1; }
+if [ -d "$OUT/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext" ]; then
+  bash "$ROOT/kext/compare_bigsurface.sh" "$OUT/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext" "$BS" > "$OUT/bigsurface-compare.txt" 2>&1 || true
+  say "comparison with base EFI's prebuilt BigSurface-6.6RC-Custom: efi/build/bigsurface-compare.txt"
 fi
+rm -rf "$OUT/EFI/OC/Kexts/BigSurface.kext"
+cp -R "$BS" "$OUT/EFI/OC/Kexts/BigSurface.kext"
+
+say "== add AirportItlwm for Tahoe"
+IT="$ROOT/kext/build-itlwm/AirportItlwm-Tahoe.kext"
+[ -d "$IT" ] || { say "ERROR: $IT not built"; exit 1; }
+cp -R "$IT" "$OUT/EFI/OC/Kexts/"
+IT_EXEC="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$IT/Contents/Info.plist")"
+python3 -I "$HERE/edit_config.py" "$CFG" "$IT_EXEC" | tee -a "$REPORT"
 
 say "== SMBIOS placeholders (generated per device at install time)"
 MODEL="$(/usr/libexec/PlistBuddy -c 'Print :PlatformInfo:Generic:SystemProductName' "$CFG")"
@@ -164,7 +171,7 @@ say "== validation: ocvalidate ${OCVER}"
 bash "$HERE/validate_oc.sh" "$OUT/ocvalidate" "$CFG" | tee -a "$REPORT"
 test "${PIPESTATUS[0]}" -eq 0
 say "== validation: check_efi.py"
-python3 -I "$HERE/check_efi.py" "$OUT/EFI" --require-kext BigSurface.kext --require-kext Lilu.kext \
+python3 -I "$HERE/check_efi.py" "$OUT/EFI" --require-kext BigSurface.kext --require-kext Lilu.kext --require-kext AirportItlwm-Tahoe.kext \
   --manifest "$OUT/efi-manifest.json" | tee -a "$REPORT"
 test "${PIPESTATUS[0]}" -eq 0
 

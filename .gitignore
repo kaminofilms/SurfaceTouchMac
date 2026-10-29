@@ -11,3 +11,4 @@ image/work/
 payload/
 *.zip
 .DS_Store
+kext/build-itlwm/
