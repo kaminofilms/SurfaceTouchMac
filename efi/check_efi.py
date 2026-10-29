@@ -33,6 +33,12 @@ def sha256(path):
     return h.hexdigest()
 
 
+def exists_ci(path):
+    """FAT is case-insensitive; accept any case for the final component."""
+    d, name = os.path.split(path)
+    return os.path.isdir(d) and any(f.lower() == name.lower() for f in os.listdir(d))
+
+
 def kext_bundle_id(kext_dir, plist_rel):
     p = os.path.join(kext_dir, plist_rel)
     if not os.path.isfile(p):
@@ -61,7 +67,7 @@ def main(argv):
     errors, warnings = [], []
     cfg_path = os.path.join(oc, "config.plist")
     for must in [cfg_path, os.path.join(oc, "OpenCore.efi"), os.path.join(efi, "BOOT", "BOOTx64.efi")]:
-        if not os.path.isfile(must):
+        if not exists_ci(must):
             errors.append(f"missing {os.path.relpath(must, efi)}")
     if errors:
         report(errors, warnings)

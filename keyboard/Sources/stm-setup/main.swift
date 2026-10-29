@@ -99,7 +99,8 @@ func installEFI(source: String, dryRun: Bool) -> Int32 {
     guard let plan = planEFI() else { return 2 }
     let src = URL(fileURLWithPath: source).appendingPathComponent("EFI")
     guard FileManager.default.fileExists(atPath: src.appendingPathComponent("OC/OpenCore.efi").path),
-          FileManager.default.fileExists(atPath: src.appendingPathComponent("BOOT/BOOTx64.efi").path) else {
+          ((try? FileManager.default.contentsOfDirectory(atPath: src.appendingPathComponent("BOOT").path)) ?? [])
+            .contains(where: { $0.lowercased() == "bootx64.efi" }) else {
         log("source \(src.path) is not an OpenCore EFI folder")
         return 1
     }
