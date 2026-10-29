@@ -1,0 +1,76 @@
+# Builds the USB image on this PUBLIC repo's free macOS runner, but uploads it
+# ONLY to the private repo kaminofilms/SurfaceTouchMac-image. Nothing that
+# contains Apple software is published here: no artifacts, no releases, and
+# the logs only show versions, checksums and a masked serial.
+#
+# Needs the secret IMAGE_REPO_TOKEN: a fine-grained token limited to
+# SurfaceTouchMac-image with "Contents: Read and write".
+name: image-to-private
+
+on:
+  workflow_dispatch:
+    inputs:
+      private_repo:
+        description: Private repo that receives the image
+        default: kaminofilms/SurfaceTouchMac-image
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: macos-15
+    timeout-minutes: 330
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PRIVATE_TOKEN: ${{ secrets.IMAGE_REPO_TOKEN }}
+      PRIVATE_REPO: ${{ inputs.private_repo }}
+    defaults:
+      run:
+        shell: bash --noprofile --norc -eo pipefail -c "mkdir -p $RUNNER_TEMP/ci-logs; exec > >(tee -a $RUNNER_TEMP/ci-logs/image-build.log) 2>&1; echo \"### step $GITHUB_ACTION\"; source {0}"
+    steps:
+      - name: Check the private destination before doing any work
+        run: |
+          [ -n "$PRIVATE_TOKEN" ] || { echo "secret IMAGE_REPO_TOKEN is not set"; exit 1; }
+          priv=$(GH_TOKEN="$PRIVATE_TOKEN" gh api "repos/$PRIVATE_REPO" --jq .private)
+          [ "$priv" = "true" ] || { echo "$PRIVATE_REPO is not private; refusing"; exit 1; }
+          echo "destination $PRIVATE_REPO is private"
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          df -h /
+          keep="$(xcode-select -p | sed 's|/Contents/Developer||')"
+          for x in /Applications/Xcode_*.app; do [ "$x" != "$keep" ] && sudo rm -rf "$x" & done; wait
+          sudo rm -rf ~/Library/Android /usr/local/share/dotnet /Users/runner/hostedtoolcache || true
+          df -h /
+      - name: Payload (open-source parts, from this repo's payload-latest release)
+        run: |
+          gh release download payload-latest -R "$GITHUB_REPOSITORY" -p 'SurfaceTouchMac-payload.zip*'
+          shasum -a 256 -c SurfaceTouchMac-payload.zip.sha256
+          ditto -x -k SurfaceTouchMac-payload.zip .
+          ( cd payload && shasum -a 256 -c SHA256SUMS.txt >/dev/null && echo "payload files verified" )
+      - name: Build image (Apple installer + OpenCore + setup package)
+        run: PAYLOAD_DIR="$PWD/payload" bash image/build_image.sh
+      - name: Upload to the private repo only
+        run: |
+          cp docs/JOIN-AND-FLASH.md image/join/* image/out/
+          cp payload/logs/* image/out/ 2>/dev/null || true
+          VER=$(python3 -c 'import json;print(json.load(open("image/out/image-info.json"))["macos_version"])')
+          TAG="image-${VER}-${GITHUB_RUN_NUMBER}"
+          GH_TOKEN="$PRIVATE_TOKEN" gh release create "$TAG" -R "$PRIVATE_REPO" --title "$TAG" --prerelease \
+            --notes "Private: contains Apple macOS ${VER}. Do not redistribute. See JOIN-AND-FLASH.md. Built from ${GITHUB_REPOSITORY}@${GITHUB_SHA::7}." \
+            image/out/*
+          echo "uploaded release $TAG to $PRIVATE_REPO"
+      - name: Remove the image from this runner
+        if: always()
+        run: rm -rf image/out image/work payload SurfaceTouchMac-payload.zip
+      - name: Push logs to the private repo's ci-logs branch
+        if: always()
+        shell: bash
+        run: |
+          [ -n "$PRIVATE_TOKEN" ] || exit 0
+          cd "$RUNNER_TEMP/ci-logs"
+          git init -q && git checkout -q -b ci-logs
+          git -c user.name=ci -c user.email=ci@localhost add -A
+          git -c user.name=ci -c user.email=ci@localhost commit -q -m "logs ${GITHUB_RUN_ID}"
+          git push -q -f "https://x-access-token:${PRIVATE_TOKEN}@github.com/${PRIVATE_REPO}.git" ci-logs
