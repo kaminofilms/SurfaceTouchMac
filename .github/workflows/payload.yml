@@ -97,7 +97,7 @@ jobs:
         run: |
           mkdir -p ci-logs && cd ci-logs
           for f in ../efi/build/efi-report.txt ../efi/build/efi-manifest.json ../kext/build/xcodebuild.log \
-                   ../efi/build/bigsurface-compare.txt ../kext/build-itlwm/xcodebuild.log \
+                   ../efi/build/bigsurface-compare.txt ../kext/build-itlwm/xcodebuild.log ../kext/build/voodooinput-xcodebuild.log \
                    ../keyboard/dist/keyboard-ci.log ../keyboard/dist-tests.log ../setup/build/distribution.xml; do
             [ -f "$f" ] && cp "$f" . || true
           done

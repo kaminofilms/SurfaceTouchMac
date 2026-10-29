@@ -55,6 +55,29 @@ KEXT="$(find "$OUT/dd" -path '*Release/BigSurface.kext' -maxdepth 6 -type d | aw
 [ -n "$KEXT" ] || { echo "BigSurface.kext not produced"; tail -50 "$OUT/xcodebuild.log"; exit 1; }
 cp -R "$KEXT" "$OUT/BigSurface.kext"
 
+echo "== VoodooInput 1.1.7 (acidanthera), as in the base EFI's custom build"
+# The base EFI's prebuilt "BigSurface-6.6RC-Custom" is symbol-identical to this
+# source build except that its VoodooInput plugin is acidanthera/VoodooInput
+# 1.1.7 instead of the fork's 1.1.3. The message/event structures the HID
+# driver uses are layout-compatible between the two (1.1.7 only adds
+# Trackpoint messages and drops an unused byte inside padding), so we build
+# 1.1.7 separately and put it in the bundle the same way.
+VI="$WORK/vi"
+mkdir -p "$VI/Lilu"
+git clone --quiet "https://github.com/${VOODOOINPUT_UPSTREAM_REPO}.git" "$VI/VoodooInput"
+git -C "$VI/VoodooInput" checkout --quiet "$VOODOOINPUT_UPSTREAM_COMMIT"
+ln -s "$WORK/BigSurface/MacKernelSDK" "$VI/VoodooInput/MacKernelSDK"
+ln -s "$WORK/BigSurface/MacKernelSDK" "$VI/Lilu/MacKernelSDK"
+xcodebuild -project "$VI/VoodooInput/VoodooInput.xcodeproj" -target VoodooInput -configuration Release \
+  ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO MACOSX_DEPLOYMENT_TARGET=10.13 SYMROOT="$OUT/vi-build" \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO > "$OUT/voodooinput-xcodebuild.log" 2>&1 \
+  || { grep -E "error:" "$OUT/voodooinput-xcodebuild.log" | awk 'NR<=20'; exit 1; }
+VIK="$(find "$OUT/vi-build" -type d -name VoodooInput.kext -path '*Release*' | awk 'NR==1')"
+[ -n "$VIK" ] || { echo "VoodooInput 1.1.7 not built"; exit 1; }
+rm -rf "$OUT/BigSurface.kext/Contents/PlugIns/VoodooInput.kext"
+cp -R "$VIK" "$OUT/BigSurface.kext/Contents/PlugIns/VoodooInput.kext"
+/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' -c 'Print :CFBundleShortVersionString' "$OUT/BigSurface.kext/Contents/PlugIns/VoodooInput.kext/Contents/Info.plist" | tr '\n' ' '; echo
+
 echo "== kext checks"
 for b in "$OUT/BigSurface.kext/Contents/MacOS/BigSurface" "$OUT"/BigSurface.kext/Contents/PlugIns/*.kext/Contents/MacOS/*; do
   lipo -info "$b"

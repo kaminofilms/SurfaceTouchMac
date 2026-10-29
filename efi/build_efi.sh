@@ -176,6 +176,11 @@ python3 -I "$HERE/check_efi.py" "$OUT/EFI" --require-kext BigSurface.kext --requ
 test "${PIPESTATUS[0]}" -eq 0
 
 say "== kexts (from manifest)"
-python3 -I -c 'import json,sys; m=json.load(open(sys.argv[1])); [print(f"{k:60s} {v[\"version\"] or \"?\":10s} enabled={v[\"enabled\"]} MaxKernel={v[\"MaxKernel\"] or \"-\"}") for k,v in sorted(m["kexts"].items())]' "$OUT/efi-manifest.json" | tee -a "$REPORT"
+python3 -I - "$OUT/efi-manifest.json" <<'PY' | tee -a "$REPORT"
+import json, sys
+m = json.load(open(sys.argv[1]))
+for k, v in sorted(m["kexts"].items()):
+    print(f"{k:72s} {str(v['version']):10s} enabled={v['enabled']!s:5s} Min={v['MinKernel'] or '-'} Max={v['MaxKernel'] or '-'}")
+PY
 echo "SMBIOS_MODEL=${MODEL}" >> "$OUT/stage.env"
 say "EFI ready: $OUT/EFI"
