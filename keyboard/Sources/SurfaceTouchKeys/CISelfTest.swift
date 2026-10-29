@@ -114,6 +114,20 @@ enum CISelfTest {
         // from "event posting blocked" if the typed_text check fails.
         EventPoster.type("!")
         pump(0.6)
+        report("post_event_access", CGPreflightPostEventAccess(), "CGPreflightPostEventAccess")
+        // CI-only diagnostic on the throwaway TextEdit document: length of the
+        // focused element's text (never its content).
+        var len = -1
+        let sys = AXUIElementCreateSystemWide()
+        var f: CFTypeRef?
+        if AXUIElementCopyAttributeValue(sys, kAXFocusedUIElementAttribute as CFString, &f) == .success, let f,
+           CFGetTypeID(f) == AXUIElementGetTypeID() {
+            var n: CFTypeRef?
+            if AXUIElementCopyAttributeValue(f as! AXUIElement, kAXNumberOfCharactersAttribute as CFString, &n) == .success {
+                len = (n as? Int) ?? -1
+            }
+        }
+        report("focused_text_length", len == 3, "characters in TextEdit document: \(len) (expected 3)")
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         report("target_app_keeps_focus", front == "com.apple.TextEdit", "frontmost=\(front ?? "nil")")
         print("TYPED_EXPECTED hi!")

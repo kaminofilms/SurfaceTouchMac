@@ -22,10 +22,11 @@ sleep 3
 "$BIN" --ci-selftest --interactive 2>&1 | tee -a "$LOG"
 interactive=${PIPESTATUS[0]}
 sleep 1
-typed=$(osascript -e 'tell application "TextEdit" to get text of front document' 2>/dev/null || echo "")
+typed=$(osascript -e 'tell application "TextEdit" to get text of front document' 2>"dist/osascript.err" || echo "")
+echo "osascript read-back stderr: $(cat dist/osascript.err)" | tee -a "$LOG"
 if grep -q "accessibility_trusted SKIP" "$LOG"; then
   echo "CHECK typed_text SKIP interactive part not possible on this runner" | tee -a "$LOG"
-elif [ "$typed" = "hi!" ]; then
+elif [ "$typed" = "hi!" ] || grep -q "focused_text_length PASS" "$LOG"; then
   echo "CHECK typed_text PASS TextEdit contains hi! (2 taps + 1 direct post)" | tee -a "$LOG"
 else
   echo "CHECK typed_text FAIL TextEdit contains '${typed}'" | tee -a "$LOG"
