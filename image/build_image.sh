@@ -109,10 +109,10 @@ say "== filesystem checks"
 INSTALL_PART="$(diskutil list -plist "$DEV" | python3 -c 'import plistlib,sys; d=plistlib.loads(sys.stdin.buffer.read()); p=d["AllDisksAndPartitions"][0]["Partitions"]; print([x["DeviceIdentifier"] for x in p if x.get("VolumeName","").startswith("Install macOS")][0])')"
 SETUP_PART="${DEV}s2"
 say "install partition: $INSTALL_PART"
-for v in "$INSTALL_PART" "$SETUP_PART"; do sudo diskutil unmount "$v" | tee -a "$LOG"; done
+for v in "/dev/${INSTALL_PART#/dev/}" "$SETUP_PART"; do sudo diskutil unmount "$v" | tee -a "$LOG"; done
 sudo fsck_msdos -n "${EFI_PART}" | tee -a "$LOG"
 sudo fsck_msdos -n "${SETUP_PART}" | tee -a "$LOG"
-sudo fsck_hfs -n "${INSTALL_PART}" | tee -a "$LOG"
+sudo fsck_hfs -n "/dev/r${INSTALL_PART#/dev/}" | tee -a "$LOG"
 say "== partition table"
 sudo gpt -r show "$DEV" | tee -a "$LOG" || diskutil list "$DEV" | tee -a "$LOG"
 hdiutil detach "$DEV" | tee -a "$LOG"
