@@ -1,0 +1,78 @@
+# Re-packs an existing private image release into fewer, larger parts
+# (GitHub's per-file limit is 2 GiB) without rebuilding the image.
+# Runs on this public repo's free Linux runner; data only moves between the
+# private repo's releases and is verified against the original checksums.
+name: resplit
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_tag:
+        description: Private release to re-pack
+        default: image-26.7.2-7
+      part_mib:
+        description: Part size in MiB (must stay under 2048)
+        default: "2000"
+
+permissions:
+  contents: read
+
+jobs:
+  resplit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      GH_TOKEN: ${{ secrets.IMAGE_REPO_TOKEN }}
+      REPO: kaminofilms/SurfaceTouchMac-image
+      SRC: ${{ inputs.source_tag }}
+      PART_MIB: ${{ inputs.part_mib }}
+    steps:
+      - name: Checks
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "::error::IMAGE_REPO_TOKEN missing"; exit 1; }
+          [ "$(gh api repos/$REPO --jq .private)" = "true" ] || { echo "::error::$REPO not private"; exit 1; }
+          [ "$PART_MIB" -lt 2048 ] || { echo "::error::part size must be < 2048 MiB"; exit 1; }
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /usr/local/share/boost || true
+          df -h / /mnt
+      - name: Download, verify and re-split (streamed)
+        run: |
+          set -euo pipefail
+          W=/mnt/w; [ "$(df --output=avail -BG /mnt | tail -1 | tr -dc 0-9)" -gt 25 ] || W=$HOME/w
+          sudo mkdir -p "$W" && sudo chown "$USER" "$W" && cd "$W"
+          gh release download "$SRC" -R "$REPO" -p 'SHA256SUMS-*' -p 'image-info.json' -p 'join*' -p 'JOIN-AND-FLASH.md'
+          BASE="$(python3 -c 'import json;print(json.load(open("image-info.json"))["compressed"])')"
+          mapfile -t PARTS < <(awk '{print $2}' SHA256SUMS-parts.txt | sort)
+          echo "source parts: ${#PARTS[@]} of $BASE"
+          mkdir -p old new
+          # download each part, check it, append to the stream; remove as we go
+          (
+            for p in "${PARTS[@]}"; do
+              gh release download "$SRC" -R "$REPO" -p "$p" -D old --clobber
+              ( cd old && grep "  $p\$" ../SHA256SUMS-parts.txt | sha256sum -c --quiet - ) >&2
+              cat "old/$p"; rm -f "old/$p"
+            done
+          ) | tee >(sha256sum | awk '{print $1}' > joined.sha) | split -b "${PART_MIB}m" -a 3 - "new/${BASE}.part-"
+          sleep 2
+          want="$(awk '{print $1}' SHA256SUMS-xz.txt)"; got="$(cat joined.sha)"
+          [ "$want" = "$got" ] || { echo "::error::joined checksum mismatch $got != $want"; exit 1; }
+          echo "joined stream matches original ($want)"
+          cd new
+          sha256sum "${BASE}".part-* > ../SHA256SUMS-parts.txt
+          [ "$(cat "${BASE}".part-* | sha256sum | awk '{print $1}')" = "$want" ] || { echo "::error::re-split mismatch"; exit 1; }
+          ls -l
+          largest=$(stat -c %s "${BASE}".part-* | sort -n | tail -1)
+          [ "$largest" -lt 2147483648 ] || { echo "::error::part over 2 GiB"; exit 1; }
+          echo "W=$W" >> "$GITHUB_ENV"; echo "BASE=$BASE" >> "$GITHUB_ENV"
+      - name: Upload as a new private release
+        run: |
+          set -euo pipefail
+          cd "$W"
+          TAG="${SRC}-big"
+          N=$(ls new | wc -l)
+          gh release delete "$TAG" -R "$REPO" -y 2>/dev/null || true
+          gh release create "$TAG" -R "$REPO" --prerelease --title "$TAG (${N} files)" \
+            --notes "Same image as ${SRC}, re-packed into ${N} files of up to ${PART_MIB} MiB. Private: contains Apple macOS. Do not redistribute. Join with join.sh / join-windows.cmd (see JOIN-AND-FLASH.md)." \
+            new/* SHA256SUMS-parts.txt SHA256SUMS-xz.txt SHA256SUMS-img.txt image-info.json join.sh join-windows.cmd JOIN-AND-FLASH.md
+          echo "::notice::uploaded $TAG with $N parts"
