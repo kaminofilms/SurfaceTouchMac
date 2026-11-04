@@ -23,16 +23,15 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string com.kaminofilms.surfacetouchkeys" -c "Add :CFBundleExecutable string A" t/A.app/Contents/Info.plist
           codesign --force --sign - t/A.app; ditto t/A.app t/B.app
           D=$RUNNER_TEMP/s
-          sed 's#>/dev/null 2>&1 &&#\&\&#; s#"$APP" >/dev/null 2>&1 \&\&#"$APP" \&\&#' setup/common/stm-local-sign > dbg.sh
-          echo "== run 1 (stderr visible)"; sudo env STM_SIGN_DIR=$D bash -x dbg.sh t/A.app 2>&1 | tail -40
-          echo "== identities"; sudo security find-identity -p codesigning $D/stm-signing.keychain-db
-          P=$(sudo cat $D/keychain-password); H=$(sudo security find-identity -p codesigning $D/stm-signing.keychain-db | awk '/Local Signing/{print $2; exit}')
-          sudo security unlock-keychain -p "$P" $D/stm-signing.keychain-db
-          echo "== variant: plain"; sudo codesign --force --sign "$H" --keychain $D/stm-signing.keychain-db t/B.app; echo rc=$?
-          echo "== variant: in search list"; sudo security list-keychains -d user -s $D/stm-signing.keychain-db; sudo codesign --force --sign "$H" t/B.app; echo rc=$?
-          echo "== variant: --timestamp=none"; sudo codesign --force --timestamp=none --sign "$H" --keychain $D/stm-signing.keychain-db t/B.app; echo rc=$?
-          echo "== variant: non-root user keychain"; cp -R $RUNNER_TEMP/s /tmp/us 2>/dev/null; sudo chown -R $(id -u) /tmp/us; security unlock-keychain -p "$P" /tmp/us/stm-signing.keychain-db; codesign --force --sign "$H" --keychain /tmp/us/stm-signing.keychain-db t/B.app; echo rc=$?
-          codesign -d -r- t/B.app
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string 2" t/B.app/Contents/Info.plist; codesign --force --sign - t/B.app
+          echo "== search list before"; sudo security list-keychains -d user
+          sudo env STM_SIGN_DIR=$D bash setup/common/stm-local-sign t/A.app
+          sudo env STM_SIGN_DIR=$D bash setup/common/stm-local-sign t/B.app
+          echo "== search list after"; sudo security list-keychains -d user
+          r1="$(codesign -d -r- t/A.app 2>&1 | grep designated)"; echo "A: $r1"; echo "B: $(codesign -d -r- t/B.app 2>&1 | grep designated)"
+          codesign --verify --strict -R="${r1#designated => }" t/B.app && echo "CHECK same_identity PASS" || echo "CHECK same_identity FAIL"
+          grep -q "certificate leaf" <<<"$r1" && echo "CHECK local_key PASS" || echo "CHECK local_key FAIL"
+          t/B.app/Contents/MacOS/A && echo "CHECK runs PASS"
       - name: Push log
         if: always()
         shell: bash
