@@ -33,7 +33,7 @@ struct GestureConfig {
     g_i32 height_um = 173200;
     g_i32 slop_um          = 3000;      // movement that turns a touch into a slide
     g_u64 hold_ns          = 350000000; // still this long -> press (drag mode)
-    g_u64 right_ns         = 900000000; // still this long -> right click
+    g_u64 right_ns         = 650000000; // still this long -> right click (iPad-like)
     g_u64 double_tap_ns    = 450000000; // 2nd tap within this time...
     g_i32 double_tap_um    = 7000;      // ...and this distance is snapped onto the 1st
     g_i32 scroll_um_per_pt = 190;       // ~5.3 points per mm on the Surface Pro 7 at 200%

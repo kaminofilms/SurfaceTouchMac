@@ -101,7 +101,11 @@ final class KeyView: NSView {
 
     override func mouseDown(with event: NSEvent) { controller?.touch(.down, on: self) }
     override func mouseUp(with event: NSEvent) { controller?.touch(.up, on: self) }
-    override func rightMouseDown(with event: NSEvent) { controller?.touch(.down, on: self) }
+    override func rightMouseDown(with event: NSEvent) {
+        // long press (the touch driver reports it as a right click): accents
+        if controller?.longPress(on: self) == true { return }
+        controller?.touch(.down, on: self)
+    }
     override func rightMouseUp(with event: NSEvent) { controller?.touch(.up, on: self) }
 
     func setPressed(_ p: Bool) { highlighted = p }
@@ -208,6 +212,9 @@ final class KeyboardController {
         return KeyboardSettings.decode(d)
     }()
     private var resizeStart: (width: Double, top: Double, x: Double)?
+    var assist = TypingAssist()
+    private var suggestionButtons: [BarButton] = []
+    private var accentPanel: KeyboardPanel?
     private var opacityButton: BarButton?
 
     private func saveSettings() {
@@ -272,6 +279,22 @@ final class KeyboardController {
         let mode = BarButton(modeTitle, label: settings.mode == .floating ? "Dock keyboard" : "Float keyboard") { [weak self] in self?.toggleMode() }
         mode.frame = NSRect(x: 98, y: barY, width: 86, height: bar)
         root.addSubview(mode)
+        // suggestions (between the buttons and the resize grip)
+        suggestionButtons = []
+        let sugStart: CGFloat = 196
+        let sugEnd: CGFloat = CGFloat(m.width) - bar - 12
+        let slots = max(0, min(3, Int((sugEnd - sugStart) / 120)))
+        if slots > 0 {
+            let w = (sugEnd - sugStart) / CGFloat(slots)
+            for i in 0..<slots {
+                let b = BarButton("", label: "Suggestion") { [weak self] in self?.acceptSuggestion(i) }
+                b.frame = NSRect(x: sugStart + CGFloat(i) * w, y: barY, width: w - 4, height: bar)
+                b.font = .systemFont(ofSize: 16)
+                b.isHidden = true
+                root.addSubview(b)
+                suggestionButtons.append(b)
+            }
+        }
         if settings.mode == .floating {
             let grip = ResizeGrip(frame: NSRect(x: m.width - bar - 4, y: barY, width: bar, height: bar))
             grip.controller = self
@@ -423,15 +446,18 @@ final class KeyboardController {
     private func fire(_ key: Key) {
         lastKeyPress = now()
         let wasLayer = state.layer
+        closeAccents()
         let (output, redraw) = state.press(key)
-        EventPoster.emit(output)
+        send(output)
         if state.hideRequested {
             manuallyHidden = true
             pinned = false
             hide()
             return
         }
-        if redraw {
+        let autoShift = applyAutoShift()
+        updateSuggestions()
+        if redraw || autoShift {
             if wasLayer != state.layer, let s = currentScreen {
                 rebuild(on: s)
                 place(on: s, field: lastField)
@@ -439,6 +465,122 @@ final class KeyboardController {
                 refreshLabels()
             }
         }
+    }
+
+    // MARK: typing assist, suggestions, accents
+
+    private func send(_ output: Output) {
+        let assistOn = TouchPrefs.typingAssist
+        switch output {
+        case .text(let t):
+            for o in (assistOn ? assist.type(t, now: now()) : [.text(t)]) { EventPoster.emit(o) }
+        case .special(.space) where assistOn:
+            for o in assist.type(" ", now: now()) { EventPoster.emit(o) }
+        case .special(let k):
+            assist.special(k)
+            EventPoster.emit(output)
+        case .none:
+            break
+        }
+    }
+
+    /// Lights Shift when the next letter should be a capital. Returns true if changed.
+    @discardableResult
+    private func applyAutoShift() -> Bool {
+        guard TouchPrefs.typingAssist, assist.shouldCapitalizeNext, !state.uppercase else { return false }
+        state.setAutoShift(true)
+        return true
+    }
+
+    func fieldFocused(isEmpty: Bool?, secure: Bool) {
+        assist.fieldFocused(isEmpty: isEmpty, secure: secure)
+        if applyAutoShift() { refreshLabels() }
+        updateSuggestions()
+    }
+
+    func resetTypingContext() {
+        assist.reset()
+        updateSuggestions()
+    }
+
+    private var currentSuggestions: [String] = []
+
+    private func updateSuggestions() {
+        var list: [String] = []
+        let word = assist.word
+        if TouchPrefs.typingAssist, assist.enabled, word.count >= 2 {
+            let range = NSRange(location: 0, length: (word as NSString).length)
+            let checker = NSSpellChecker.shared
+            if let fix = checker.correction(forWordRange: range, in: word, language: checker.language(), inSpellDocumentWithTag: 0),
+               fix.lowercased() != word.lowercased() {
+                list.append(fix)
+            }
+            for c in checker.completions(forPartialWordRange: range, in: word, language: nil, inSpellDocumentWithTag: 0) ?? []
+            where c.lowercased() != word.lowercased() && !list.contains(c) {
+                list.append(c)
+                if list.count >= 3 { break }
+            }
+            // keep the case the user started with
+            if let f = word.first, f.isUppercase { list = list.map { $0.prefix(1).uppercased() + $0.dropFirst() } }
+        }
+        currentSuggestions = list
+        for (i, b) in suggestionButtons.enumerated() {
+            if i < list.count { b.title = list[i]; b.isHidden = false } else { b.isHidden = true }
+        }
+    }
+
+    private func acceptSuggestion(_ i: Int) {
+        guard i < currentSuggestions.count else { return }
+        lastKeyPress = now()
+        for o in assist.accept(currentSuggestions[i]) { EventPoster.emit(o) }
+        updateSuggestions()
+    }
+
+    /// Long press on a letter: show accent alternatives above the key.
+    func longPress(on view: KeyView) -> Bool {
+        guard case .character(let normal, _) = view.key.action else { return false }
+        let alts = Accents.alternatives(for: normal, uppercase: state.uppercase)
+        guard !alts.isEmpty, let window = view.window else { return false }
+        closeAccents()
+        let size: CGFloat = max(view.frame.height, 48)
+        let p = KeyboardPanel(contentRect: NSRect(x: 0, y: 0, width: size * CGFloat(alts.count) + 12, height: size + 12),
+                              styleMask: [.nonactivatingPanel, .borderless], backing: .buffered, defer: false)
+        p.level = .popUpMenu
+        p.backgroundColor = .clear
+        p.isOpaque = false
+        p.hasShadow = true
+        let root = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: p.frame.width, height: p.frame.height))
+        root.material = .hudWindow
+        root.state = .active
+        root.wantsLayer = true
+        root.layer?.cornerRadius = 12
+        for (i, a) in alts.enumerated() {
+            let b = BarButton(a, label: a) { [weak self] in self?.typeAccent(a) }
+            b.font = .systemFont(ofSize: min(size * 0.45, 28))
+            b.frame = NSRect(x: 6 + CGFloat(i) * size, y: 6, width: size, height: size)
+            root.addSubview(b)
+        }
+        p.contentView = root
+        let keyOnScreen = window.convertToScreen(view.convert(view.bounds, to: nil))
+        let vf = (window.screen ?? NSScreen.main)?.visibleFrame ?? keyOnScreen
+        let x = min(max(keyOnScreen.midX - p.frame.width / 2, vf.minX), vf.maxX - p.frame.width)
+        p.setFrameOrigin(NSPoint(x: x, y: min(keyOnScreen.maxY + 4, vf.maxY - p.frame.height)))
+        p.orderFrontRegardless()
+        accentPanel = p
+        return true
+    }
+
+    private func typeAccent(_ a: String) {
+        closeAccents()
+        lastKeyPress = now()
+        send(.text(a))
+        if state.shift { state.setAutoShift(false); refreshLabels() }
+        updateSuggestions()
+    }
+
+    func closeAccents() {
+        accentPanel?.orderOut(nil)
+        accentPanel = nil
     }
 
     // MARK: show / hide
@@ -477,6 +619,7 @@ final class KeyboardController {
     }
 
     func hide() {
+        closeAccents()
         guard panel.isVisible else { return }
         state.resetTransient()
         NSAnimationContext.runAnimationGroup({ ctx in
@@ -607,6 +750,11 @@ final class FocusWatcher {
             return
         case .text:
             debouncer.text()
+            if let el = lastElement, !(previousElement.map { CFEqual($0, el) } ?? false) {
+                previousElement = el
+                keyboard.fieldFocused(isEmpty: lastCharCount.map { $0 == 0 },
+                                      secure: info.subrole == FocusClassifier.secureSubrole)
+            }
             if !keyboard.manuallyHidden {
                 let (screen, field) = screenAndField(for: frame)
                 keyboard.show(on: screen, field: field)
@@ -618,6 +766,10 @@ final class FocusWatcher {
             }
         }
     }
+
+    private var lastElement: AXUIElement?
+    private var previousElement: AXUIElement?
+    private var lastCharCount: Int?
 
     private func copyAttr(_ el: AXUIElement, _ name: String) -> CFTypeRef? {
         var v: CFTypeRef?
@@ -634,6 +786,10 @@ final class FocusWatcher {
             return (FocusInfo(role: nil), nil)
         }
         let el = f as! AXUIElement
+        lastElement = el
+        // number of characters only (to capitalise the first letter of an
+        // empty field); the text itself is never read
+        lastCharCount = copyAttr(el, kAXNumberOfCharactersAttribute) as? Int
         var pid: pid_t = 0
         AXUIElementGetPid(el, &pid)
         if pid == ownPID { return (FocusInfo(role: nil, isOwnProcess: true), nil) }
@@ -690,6 +846,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Show Keyboard", action: #selector(showKb), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Hide Keyboard (automatic mode)", action: #selector(hideKb), keyEquivalent: ""))
         menu.addItem(.separator())
+        for (title, key) in [("Hide pointer when using touch", "hidePointer"), ("Edge swipes", "edgeSwipes"),
+                             ("Big touch menus", "bigMenus"), ("Suggestions & auto-capitals", "typingAssist")] {
+            let item = NSMenuItem(title: title, action: #selector(togglePref(_:)), keyEquivalent: "")
+            item.representedObject = key
+            item.state = (UserDefaults.standard.object(forKey: key) as? Bool ?? true) ? .on : .off
+            menu.addItem(item)
+        }
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit SurfaceTouchKeys", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         statusItem.menu = menu
@@ -707,14 +871,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         if AXIsProcessTrustedWithOptions(opts) {
             watcher.start()
+            startTouchServices()
         } else {
             trustTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] t in
                 if AXIsProcessTrusted() {
                     t.invalidate()
                     self?.watcher.start()
+                    self?.startTouchServices()
                 }
             }
         }
+    }
+
+    @objc func togglePref(_ sender: NSMenuItem) {
+        guard let key = sender.representedObject as? String else { return }
+        let on = !(UserDefaults.standard.object(forKey: key) as? Bool ?? true)
+        UserDefaults.standard.set(on, forKey: key)
+        sender.state = on ? .on : .off
+        if key == "hidePointer" && !on { PointerVisibility.set(hidden: false) }
+    }
+
+    func startTouchServices() {
+        guard TouchServices.shared == nil else { return }
+        let ts = TouchServices()
+        ts.onOutsideClick = { [weak self] in self?.keyboard.resetTypingContext() }
+        TouchServices.shared = ts
+        ts.start()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        PointerVisibility.set(hidden: false)
     }
 
     func toggleKeyboard() {

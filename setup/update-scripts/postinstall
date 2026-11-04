@@ -1,0 +1,21 @@
+#!/bin/bash
+# SurfaceTouchMac update: new touch driver (iPad-style gestures) + keyboard app
+# with touch services. Replaces only BigSurface.kext in each SurfaceTouchMac
+# OpenCore copy (backed up first) and the keyboard app. config.plist, boot
+# settings, other drivers and privacy permissions are not changed.
+LOG=/Library/Logs/SurfaceTouchMac-setup.log
+exec >>"$LOG" 2>&1
+echo "=== $(date '+%Y-%m-%d %H:%M:%S') SurfaceTouchMac update"
+STM=/Library/SurfaceTouchMac
+"$STM/bin/stm-setup" update-kext --source "$STM/update" || { echo "driver update FAILED"; exit 1; }
+user="$(stat -f%Su /dev/console)"
+if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
+  uid="$(id -u "$user")"
+  if [ -f /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist ]; then
+    launchctl bootout "gui/$uid/com.kaminofilms.surfacetouchkeys" 2>/dev/null || true
+    launchctl bootstrap "gui/$uid" /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist
+  fi
+  launchctl asuser "$uid" sudo -u "$user" osascript -e 'display dialog "Touch update installed.\n\nRestart the Surface to use the new touch:\n• tap = click\n• slide = scroll\n• touch, hold, then move = drag\n• hold = right-click\n\nThe pointer hides while you use touch. Swipe in from the screen edges for Notification Center (top), Mission Control (bottom) and desktops (sides)." buttons {"OK"} default button 1 with title "SurfaceTouchMac"' >/dev/null 2>&1 || true
+fi
+echo "update finished"
+exit 0

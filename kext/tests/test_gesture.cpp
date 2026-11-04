@@ -96,7 +96,7 @@ static void test_long_hold_right_clicks() {
     CHECK(r.count(A::LeftDown) == 0, "long press also left-clicked");
 }
 
-static void test_hold_between_350_and_900_is_click() {
+static void test_hold_between_350_and_650_is_click() {
     Rec r;
     r.at(0, true, 20000, 20000);
     r.at(300, true, 20000, 20000);
@@ -179,7 +179,7 @@ int main() {
     test_scroll_vertical_follows_finger();
     test_hold_then_move_drags();
     test_long_hold_right_clicks();
-    test_hold_between_350_and_900_is_click();
+    test_hold_between_350_and_650_is_click();
     test_double_tap_snaps_to_first();
     test_far_or_late_second_tap_not_snapped();
     test_cancel_releases_without_click();

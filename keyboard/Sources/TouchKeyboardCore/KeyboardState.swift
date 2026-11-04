@@ -56,6 +56,11 @@ public struct KeyboardState: Sendable {
         }
     }
 
+    /// Auto-capitalisation: light the one-shot Shift (ignored while Caps Lock is on).
+    public mutating func setAutoShift(_ on: Bool) {
+        if !capsLock { shift = on }
+    }
+
     public mutating func resetTransient() {
         shift = false
         layer = .letters

@@ -160,10 +160,66 @@ func installEFI(source: String, dryRun: Bool) -> Int32 {
     return 0
 }
 
+/// Replaces EFI/OC/Kexts/BigSurface.kext in every OpenCore EFI partition that
+/// already contains it (internal SSD and the installer USB), keeping config.plist.
+func updateKext(source: String) -> Int32 {
+    if checkHardware() != 0 { return 2 }
+    let src = URL(fileURLWithPath: source).appendingPathComponent("BigSurface.kext")
+    guard FileManager.default.fileExists(atPath: src.appendingPathComponent("Contents/Info.plist").path) else {
+        log("no BigSurface.kext in \(source)"); return 1
+    }
+    let disks = LiveDisks()
+    var efis: [String] = []
+    for whole in disks.wholeDisks() {
+        guard let info = disks.info(whole), (info["VirtualOrPhysical"] as? String) == "Physical",
+              let l = disks.list(whole),
+              let all = l["AllDisksAndPartitions"] as? [[String: Any]],
+              let entry = all.first(where: { ($0["DeviceIdentifier"] as? String) == whole }),
+              let parts = entry["Partitions"] as? [[String: Any]] else { continue }
+        efis += parts.filter { ($0["Content"] as? String) == "EFI" }.compactMap { $0["DeviceIdentifier"] as? String }
+    }
+    var updated = 0
+    let fm = FileManager.default
+    for efi in efis {
+        guard let pre = disks.info(efi) else { continue }
+        let wasMounted = (pre["MountPoint"] as? String).map { !$0.isEmpty } ?? false
+        if !wasMounted && run("/usr/sbin/diskutil", ["mount", efi]).0 != 0 { continue }
+        defer { if !wasMounted { _ = run("/usr/sbin/diskutil", ["unmount", efi]) } }
+        guard let post = disks.info(efi), let mp = post["MountPoint"] as? String, !mp.isEmpty else { continue }
+        let kexts = URL(fileURLWithPath: mp).appendingPathComponent("EFI/OC/Kexts")
+        let dst = kexts.appendingPathComponent("BigSurface.kext")
+        guard fm.fileExists(atPath: kexts.deletingLastPathComponent().appendingPathComponent("OpenCore.efi").path),
+              fm.fileExists(atPath: dst.path) else { continue }     // not our OpenCore: leave it alone
+        let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
+        let backupDir = URL(fileURLWithPath: "/Library/SurfaceTouchMac/Backups")
+        try? fm.createDirectory(at: backupDir, withIntermediateDirectories: true)
+        let zip = backupDir.appendingPathComponent("BigSurface-\(efi)-\(stamp).zip").path
+        if run("/usr/bin/ditto", ["-c", "-k", "--keepParent", dst.path, zip]).0 != 0 { log("backup failed on \(efi)"); continue }
+        let staging = kexts.appendingPathComponent("BigSurface.kext.stm-new")
+        try? fm.removeItem(at: staging)
+        if run("/usr/bin/ditto", ["--norsrc", "--noextattr", src.path, staging.path]).0 != 0 || sha256Tree(src) != sha256Tree(staging) {
+            log("copy/verify failed on \(efi); left unchanged")
+            try? fm.removeItem(at: staging)
+            continue
+        }
+        try? fm.removeItem(at: dst)
+        do { try fm.moveItem(at: staging, to: dst) } catch { log("swap failed on \(efi): \(error)"); continue }
+        print("UPDATED: BigSurface.kext on \(efi) (backup \(zip))")
+        updated += 1
+    }
+    if updated == 0 { log("no SurfaceTouchMac OpenCore EFI found to update"); return 1 }
+    return 0
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 switch args.first {
 case "check-hardware":
     exit(checkHardware())
+case "update-kext":
+    guard let i = args.firstIndex(of: "--source"), i + 1 < args.count else {
+        log("usage: stm-setup update-kext --source <dir containing BigSurface.kext>"); exit(1)
+    }
+    exit(updateKext(source: args[i + 1]))
 case "plan-efi":
     exit(planEFI() == nil ? 2 : 0)
 case "install-efi":

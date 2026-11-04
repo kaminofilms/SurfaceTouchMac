@@ -79,6 +79,15 @@ enum CISelfTest {
         kb.toggleMode()                               // back to docked (saved for the next run)
         report("docked_restored", kb.settings.mode == .docked && abs(kb.panel.alphaValue - 1) < 0.01)
 
+        // accent pop-up on long press
+        if let e = allKeyViews(kb).first(where: { $0.key.label == "e" }) {
+            report("accent_popup", kb.longPress(on: e), "long press on e")
+            kb.closeAccents()
+        }
+        if let k = allKeyViews(kb).first(where: { $0.key.label == "k" }) {
+            report("no_accents_for_k", !kb.longPress(on: k))
+        }
+
         if !interactive {
             kb.hide()
             return failures == 0
@@ -146,6 +155,43 @@ enum CISelfTest {
             }
         }
         report("focused_text_length", len == 3, "characters in TextEdit document: \(len) (expected 3)")
+        // auto-capital at the start of the empty document. CI-only: reads the
+        // throwaway TextEdit document to verify (the app never reads text).
+        var docText = ""
+        let sysEl = AXUIElementCreateSystemWide()
+        var fe: CFTypeRef?
+        if AXUIElementCopyAttributeValue(sysEl, kAXFocusedUIElementAttribute as CFString, &fe) == .success, let fe,
+           CFGetTypeID(fe) == AXUIElementGetTypeID() {
+            docText = MenuReader.attr(fe as! AXUIElement, kAXValueAttribute) as? String ?? ""
+        }
+        report("auto_capital_start", docText.hasPrefix("H"), "document starts with '\(docText.prefix(3))'")
+
+        // big touch menu built from TextEdit's real Edit menu
+        let teApp = AXUIElementCreateApplication(te.processIdentifier)
+        var menuRows: [MenuRow] = []
+        if let bar = MenuReader.attr(teApp, kAXMenuBarAttribute), CFGetTypeID(bar) == AXUIElementGetTypeID(),
+           let items = MenuReader.attr(bar as! AXUIElement, kAXChildrenAttribute) as? [AXUIElement],
+           let edit = items.first(where: { (MenuReader.attr($0, kAXTitleAttribute) as? String) == "Edit" }),
+           let menu = (MenuReader.attr(edit, kAXChildrenAttribute) as? [AXUIElement])?.first {
+            menuRows = MenuReader.rows(of: menu)
+        }
+        report("touch_menu_reads_items", menuRows.filter { !$0.isSeparator }.count >= 5, "rows=\(menuRows.count)")
+        let tm = TouchMenuController()
+        if tm.present(rows: menuRows, title: "Edit", at: NSPoint(x: 200, y: screen.visibleFrame.maxY)) {
+            let rowViews = tm.panel.contentView.map { v -> [RowView] in
+                func walk(_ x: NSView) -> [RowView] {
+                    if let r = x as? RowView { return [r] }
+                    return x.subviews.flatMap(walk)
+                }
+                return walk(v)
+            } ?? []
+            let minH = rowViews.filter { !$0.row.isSeparator }.map { $0.frame.height }.min() ?? 0
+            report("touch_menu_rows_finger_sized", minH >= 44 && tm.isVisible, "rows=\(rowViews.count) minHeight=\(Int(minH))")
+            tm.close()
+        } else {
+            report("touch_menu_rows_finger_sized", false, "overlay not shown")
+        }
+
         let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         report("target_app_keeps_focus", front == "com.apple.TextEdit", "frontmost=\(front ?? "nil")")
         print("TYPED_EXPECTED hi!")
