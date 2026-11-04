@@ -112,17 +112,17 @@ static void test_two_finger_tracking_and_pinch() {
     }
 }
 
-static void test_lift_reports_only_fingers_on_screen() {
-    // One finger left on screen must be reported as exactly one contact,
-    // otherwise BigSurface switches to trackpad mode (the "dumb mouse" bug).
+static void test_lift_reports_touch_up_once() {
     HeatmapProcessor p;
     run(p, {finger(10, 10), finger(40, 30)});
-    auto f = run(p, {finger(10, 10)});
-    CHECK(f.count == 1 && touching(f) == 1, "after one lift count=%d touching=%d", f.count, touching(f));
+    auto f = run(p, {finger(10, 10)});   // second finger lifted
+    CHECK(f.count == 2 && touching(f) == 1, "count=%d touching=%d", f.count, touching(f));
+    auto g = run(p, {finger(10, 10)});
+    CHECK(g.count == 1 && touching(g) == 1, "after lift count=%d", g.count);
     auto e = run(p, {});
-    CHECK(e.count == 0, "all lifted count=%d", e.count);
-    auto s1 = run(p, {finger(30, 20)});
-    CHECK(s1.count == 1, "single finger count=%d", s1.count);
+    CHECK(e.count == 1 && touching(e) == 0, "final lift count=%d touching=%d", e.count, touching(e));
+    auto z = run(p, {});
+    CHECK(z.count == 0, "idle count=%d", z.count);
 }
 
 static void test_ten_fingers() {
@@ -319,7 +319,7 @@ int main() {
     test_empty();
     test_single_finger_position();
     test_two_finger_tracking_and_pinch();
-    test_lift_reports_only_fingers_on_screen();
+    test_lift_reports_touch_up_once();
     test_ten_fingers();
     test_palm_rejection();
     test_pen_suppresses_touch();

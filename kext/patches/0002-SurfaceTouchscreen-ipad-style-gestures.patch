@@ -1,0 +1,182 @@
+diff --git a/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp b/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp
+index a5eaf01..36bc0de 100644
+--- a/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp
++++ b/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp
+@@ -7,6 +7,7 @@
+ //
+ 
+ #include "SurfaceTouchscreenHIDEventDriver.hpp"
++#include <pexpert/pexpert.h>
+ 
+ #define super VoodooI2CMultitouchHIDEventDriver
+ OSDefineMetaClassAndStructors(SurfaceTouchscreenHIDEventDriver, VoodooI2CMultitouchHIDEventDriver);
+@@ -131,6 +132,101 @@ bool SurfaceTouchscreenHIDEventDriver::checkFingerTouch(AbsoluteTime timestamp,
+     return got_transducer;
+ }
+ 
++// ---------------------------------------------------------------------------
++// SurfaceTouchMac: iPad-style single-finger touch
++// ---------------------------------------------------------------------------
++
++void SurfaceTouchscreenHIDEventDriver::loadGestureConfig() {
++    int dummy = 0;
++    if (PE_parse_boot_argn("-stmlegacytouch", &dummy, sizeof(dummy)))
++        stm_gestures = false;
++    stm::GestureConfig cfg;
++    UInt32 v = 0;
++    if (PE_parse_boot_argn("stmscrollinv", &v, sizeof(v)) && v)
++        cfg.scroll_sign = -1;
++    v = 0;
++    if (PE_parse_boot_argn("stmscrollspeed", &v, sizeof(v)) && v >= 25 && v <= 400)
++        cfg.scroll_um_per_pt = (stm::g_i32)(cfg.scroll_um_per_pt * 100 / v);   // percent
++    gesture.setConfig(cfg);
++    IOLog("%s::SurfaceTouchMac gestures %s\n", getName(), stm_gestures ? "enabled" : "disabled (legacy touch)");
++}
++
++void SurfaceTouchscreenHIDEventDriver::dispatchGesture(AbsoluteTime timestamp, const stm::GestureEvent *ev, UInt32 count) {
++    using A = stm::GestureAction;
++    for (UInt32 i = 0; i < count; i++) {
++        const stm::GestureEvent &e = ev[i];
++        IOFixed x = e.x, y = e.y;
++        switch (e.action) {
++            case A::Move:
++                dispatchDigitizerEventWithTiltOrientation(timestamp, gesture_id, gesture_type, 0x1, 0x0, x, y);
++                break;
++            case A::LeftDown:
++            case A::DragMove:
++                dispatchDigitizerEventWithTiltOrientation(timestamp, gesture_id, gesture_type, 0x1, 0x1, x, y);
++                break;
++            case A::LeftUp:
++            case A::RightUp:
++                dispatchDigitizerEventWithTiltOrientation(timestamp, gesture_id, gesture_type, 0x1, 0x0, x, y);
++                break;
++            case A::RightDown:
++                dispatchDigitizerEventWithTiltOrientation(timestamp, gesture_id, gesture_type, 0x1, 0x2, x, y);
++                break;
++            case A::ScrollBegin:
++            case A::Scroll:
++            case A::ScrollEnd: {
++                IOOptionBits opt = kHIDDispatchOptionScrollNoAcceleration;
++                opt |= e.action == A::ScrollBegin ? kHIDDispatchOptionPhaseBegan
++                     : e.action == A::ScrollEnd   ? kHIDDispatchOptionPhaseEnded
++                                                  : kHIDDispatchOptionPhaseChanged;
++                // axis 1 = vertical, axis 2 = horizontal; values in points (16.16)
++                dispatchScrollWheelEventWithFixed(timestamp, (IOFixed)(e.dy * 65536), (IOFixed)(e.dx * 65536), 0, opt);
++                break;
++            }
++            default:
++                break;
++        }
++    }
++}
++
++void SurfaceTouchscreenHIDEventDriver::gestureRelease(AbsoluteTime timestamp, bool cancel) {
++    stm::GestureEvent out[stm::TouchGesture::kMaxOut];
++    UInt32 n;
++    if (cancel) {
++        n = gesture.cancel(out);
++    } else {
++        UInt64 ns;
++        absolutetime_to_nanoseconds(timestamp, &ns);
++        n = gesture.update(ns, false, gesture_x, gesture_y, out);
++    }
++    dispatchGesture(timestamp, out, n);
++}
++
++bool SurfaceTouchscreenHIDEventDriver::handleGestureFinger(AbsoluteTime timestamp, VoodooI2CMultitouchEvent event) {
++    for (int index = 0; index < event.transducers->getCount(); index++) {
++        VoodooI2CDigitiserTransducer* transducer = OSDynamicCast(VoodooI2CDigitiserTransducer, event.transducers->getObject(index));
++        if (!transducer || transducer->type != kDigitiserTransducerFinger)
++            continue;
++        UInt16 value = transducer->tip_switch.value();
++        UInt16 last_value = transducer->tip_switch.last.value;
++        if (!value && !last_value)
++            continue;
++        IOFixed x = ((transducer->coordinates.x.value() * 1.0f) / transducer->logical_max_x) * 65535;
++        IOFixed y = ((transducer->coordinates.y.value() * 1.0f) / transducer->logical_max_y) * 65535;
++        checkRotation(&x, &y);
++        gesture_id = transducer->secondary_id;
++        gesture_type = transducer->type;
++        gesture_x = x;
++        gesture_y = y;
++        UInt64 ns;
++        absolutetime_to_nanoseconds(timestamp, &ns);
++        stm::GestureEvent out[stm::TouchGesture::kMaxOut];
++        UInt32 n = gesture.update(ns, value != 0, x, y, out);
++        dispatchGesture(timestamp, out, n);
++        return true;
++    }
++    return false;
++}
++
+ void SurfaceTouchscreenHIDEventDriver::checkRotation(IOFixed* x, IOFixed* y) {
+     if (active_framebuffer) {
+         if (current_rotation & kIOFBSwapAxes) {
+@@ -223,11 +319,26 @@ void SurfaceTouchscreenHIDEventDriver::forwardReport(VoodooI2CMultitouchEvent ev
+     }
+     
+     if (event.contact_count > 0) {
+-        // Send multitouch information to the multitouch interface
+-        if (event.contact_count == 1 && (checkStylus(timestamp, event) || checkFingerTouch(timestamp, event)))
++        if (stm_gestures) {
++            if (event.contact_count == 1 && checkStylus(timestamp, event)) {
++                if (gesture.state() != stm::TouchGesture::State::Idle)
++                    gestureRelease(timestamp, true);     // pen took over
++                return;
++            }
++            if (event.contact_count == 1 && handleGestureFinger(timestamp, event))
++                return;
++            // two or more fingers: trackpad gestures (scroll, pinch, Mission Control)
++            if (gesture.state() != stm::TouchGesture::State::Idle)
++                gestureRelease(timestamp, true);
++        } else if (event.contact_count == 1 && (checkStylus(timestamp, event) || checkFingerTouch(timestamp, event))) {
+             return;
++        }
++        // Send multitouch information to the multitouch interface
+         if (multitouch_interface)
+             multitouch_interface->handleInterruptReport(event, timestamp);
++    } else if (stm_gestures && gesture.state() != stm::TouchGesture::State::Idle) {
++        // empty report: the finger is gone even if no "lifted" entry was sent
++        gestureRelease(timestamp, false);
+     }
+ }
+ 
+@@ -236,6 +347,7 @@ bool SurfaceTouchscreenHIDEventDriver::handleStart(IOService* provider) {
+         return false;
+     
+     active_framebuffer = getFramebuffer();
++    loadGestureConfig();
+     
+     return true;
+ }
+diff --git a/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.hpp b/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.hpp
+index 65eba0b..5fd8df6 100644
+--- a/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.hpp
++++ b/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.hpp
+@@ -13,6 +13,7 @@
+ #include <IOKit/graphics/IODisplay.h>
+ 
+ #include "VoodooI2CMultitouchHIDEventDriver.hpp"
++#include "TouchGesture.hpp"
+ 
+ #define RIGHT_CLICK_PRESS_RANGE 100     // in which range is considered a long press right click event
+ 
+@@ -89,5 +90,18 @@ class EXPORT SurfaceTouchscreenHIDEventDriver : public VoodooI2CMultitouchHIDEve
+     void checkRotation(IOFixed* x, IOFixed* y);
+     
+     IOFramebuffer* getFramebuffer();
++
++    // SurfaceTouchMac: iPad-style single-finger touch (boot-arg -stmlegacytouch
++    // restores BigSurface's original hover-then-press behaviour)
++    bool stm_gestures = true;
++    stm::TouchGesture gesture;
++    UInt32 gesture_id = 0;
++    DigitiserTransducerType gesture_type = kDigitiserTransducerFinger;
++    IOFixed gesture_x = 0;
++    IOFixed gesture_y = 0;
++    void loadGestureConfig();
++    bool handleGestureFinger(AbsoluteTime timestamp, VoodooI2CMultitouchEvent event);
++    void gestureRelease(AbsoluteTime timestamp, bool cancel);
++    void dispatchGesture(AbsoluteTime timestamp, const stm::GestureEvent *ev, UInt32 count);
+ };
+ #endif /* SurfaceTouchscreenHIDEventDriver_hpp */

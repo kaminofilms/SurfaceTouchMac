@@ -24,7 +24,8 @@ jobs:
           source versions.env
           git clone -q https://github.com/Xiashangning/BigSurfaceHIDDriver.git /tmp/hid
           git -C /tmp/hid checkout -q "$BIGSURFACEHID_COMMIT"
-          git -C /tmp/hid apply --check "$PWD/kext/patches/0001-BigSurfaceHIDDriver-kernel-multitouch.patch"
+          git -C /tmp/hid apply "$PWD/kext/patches/0001-BigSurfaceHIDDriver-kernel-multitouch.patch"
+          git -C /tmp/hid apply --check "$PWD/kext/patches/0002-SurfaceTouchscreen-ipad-style-gestures.patch"
           echo "patch applies cleanly"
       - name: Shell syntax
         run: for f in $(git ls-files '*.sh') setup/scripts/preinstall setup/scripts/postinstall; do bash -n "$f" && echo "ok $f"; done

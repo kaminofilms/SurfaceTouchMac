@@ -25,6 +25,9 @@ done
 # Apply the SurfaceTouchMac kernel multitouch change
 cp "$HERE/IPTSKernelProcessor.hpp" Dependencies/BigSurfaceHIDDriver/BigSurfaceHIDDriver/IPTS/
 git -C Dependencies/BigSurfaceHIDDriver apply --verbose "$HERE/patches/0001-BigSurfaceHIDDriver-kernel-multitouch.patch"
+# iPad-style single-finger touch (tap/slide/hold) in the touchscreen event driver
+cp "$HERE/TouchGesture.hpp" Dependencies/BigSurfaceHIDDriver/BigSurfaceHIDDriver/HIDEventDriver/
+git -C Dependencies/BigSurfaceHIDDriver apply --verbose "$HERE/patches/0002-SurfaceTouchscreen-ipad-style-gestures.patch"
 
 # Lilu SDK (DEBUG build provides headers + libs the project links against)
 # Use the same Lilu version the EFI ships (LILU_VER from efi/build_efi.sh), else latest.
@@ -92,6 +95,8 @@ if grep -q "kernelTouch" "$OUT/hid-symbols.txt"; then
     echo "WARN: unexpected runtime symbol references (listed above)"
   fi
   echo "kernel multitouch symbols present"
+  grep -q "handleGestureFinger" "$OUT/hid-symbols.txt" || { echo "ERROR: gesture code missing"; exit 1; }
+  echo "iPad-style gesture symbols present"
 else
   echo "ERROR: SurfaceTouchMac kernel multitouch code missing from BigSurfaceHIDDriver"; exit 1
 fi
