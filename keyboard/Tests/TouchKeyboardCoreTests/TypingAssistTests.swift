@@ -71,7 +71,8 @@ final class TypingAssistTests: XCTestCase {
         let out = a.accept("tomorrow")
         XCTAssertEqual(out, [.special(.delete), .special(.delete), .special(.delete), .text("tomorrow ")])
         XCTAssertEqual(a.word, "")
-        XCTAssertEqual(TypingAssist().accept("x"), [])        // nothing typed: nothing replaced
+        var fresh = TypingAssist()
+        XCTAssertEqual(fresh.accept("x"), [])                 // nothing typed: nothing replaced
     }
 
     func testPasswordFieldsAreUntouched() {
