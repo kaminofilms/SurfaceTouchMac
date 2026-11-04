@@ -8,6 +8,8 @@ exec >>"$LOG" 2>&1
 echo "=== $(date '+%Y-%m-%d %H:%M:%S') SurfaceTouchMac update"
 STM=/Library/SurfaceTouchMac
 "$STM/bin/stm-setup" update-kext --source "$STM/update" || { echo "driver update FAILED"; exit 1; }
+# keep the keyboard's identity stable so its Accessibility permission survives updates
+"$(dirname "$0")/stm-local-sign" /Applications/SurfaceTouchKeys.app || true
 user="$(stat -f%Su /dev/console)"
 if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
   uid="$(id -u "$user")"
@@ -15,7 +17,7 @@ if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
     launchctl bootout "gui/$uid/com.kaminofilms.surfacetouchkeys" 2>/dev/null || true
     launchctl bootstrap "gui/$uid" /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist
   fi
-  launchctl asuser "$uid" sudo -u "$user" osascript -e 'display dialog "Touch update installed.\n\nRestart the Surface to use the new touch:\n• tap = click\n• slide = scroll\n• touch, hold, then move = drag\n• hold = right-click\n\nDock: slide your finger along it to magnify, double-tap an icon to open it.\n\nThe pointer hides while you use touch. Swipe in from the screen edges for Notification Center (top), Mission Control (up from the Dock) and desktops (sides)." buttons {"OK"} default button 1 with title "SurfaceTouchMac"' >/dev/null 2>&1 || true
+  launchctl asuser "$uid" sudo -u "$user" osascript -e 'display dialog "Touch update installed.\n\nRestart the Surface to use the new touch:\n• tap = click\n• slide = scroll\n• touch, hold, then move = drag\n• hold still = right-click menu (lift, then tap an item)\n\nDock: slide your finger along it to magnify, double-tap an icon to open it.\n\nThe pointer hides while you use touch. Swipe in from the screen edges for Notification Center (top), Mission Control (up from the Dock) and desktops (sides).\n\nOne time only: if the keyboard does not open by itself after the restart, remove SurfaceTouchKeys from Privacy & Security › Accessibility with the minus button and add it again with the plus button. Future updates keep the permission." buttons {"OK"} default button 1 with title "SurfaceTouchMac"' >/dev/null 2>&1 || true
 fi
 echo "update finished"
 exit 0

@@ -58,12 +58,19 @@ fi
 "$STM/bin/stm-setup" install-efi --source "$WORK" || fail "OpenCore was not installed to the internal SSD (see messages above)"
 
 # ---------------------------------------------------------------- 3. pen helper
-if [ -x /usr/local/bin/IPTSDaemon ] && [ -f /Library/LaunchDaemons/com.kaminofilms.stm.iptsd.plist ]; then
+# Never run a second touch helper: two copies fight over the touchscreen.
+other="$(grep -l IPTSDaemon /Library/LaunchDaemons/*.plist 2>/dev/null | grep -v com.kaminofilms.stm.iptsd | head -1)"
+if [ -n "$other" ]; then
+  echo "pen helper: already provided by $other; not starting a second copy"
+  rm -f /Library/LaunchDaemons/com.kaminofilms.stm.iptsd.plist
+elif [ -x /usr/local/bin/IPTSDaemon ] && [ -f /Library/LaunchDaemons/com.kaminofilms.stm.iptsd.plist ]; then
   launchctl bootout system/com.kaminofilms.stm.iptsd 2>/dev/null || true
   launchctl bootstrap system /Library/LaunchDaemons/com.kaminofilms.stm.iptsd.plist && echo "pen helper started"
 fi
 
 # ---------------------------------------------------------------- 4. keyboard
+# keep the keyboard's identity stable so its Accessibility permission survives updates
+"$(dirname "$0")/stm-local-sign" /Applications/SurfaceTouchKeys.app || true
 user="$(stat -f%Su /dev/console)"
 if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
   uid="$(id -u "$user")"

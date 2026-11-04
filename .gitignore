@@ -12,3 +12,4 @@ image/work/
 *.zip
 .DS_Store
 kext/build-itlwm/
+kext/tests/test_gesture

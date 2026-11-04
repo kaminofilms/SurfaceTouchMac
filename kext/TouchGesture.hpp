@@ -9,7 +9,7 @@
 //   tap                      -> left click at the finger (immediately on lift)
 //   slide                    -> scroll the content under the finger
 //   touch, hold still, move  -> press and drag (move windows, select text)
-//   hold still longer        -> right click (context menu)
+//   hold still longer        -> right click (menu opens and stays open)
 //   two taps                 -> double click (2nd tap snapped onto the 1st)
 //
 // In the Dock band along the bottom (or side) edge it works like a mouse
@@ -129,6 +129,7 @@ public:
             }
             if (t_ns - t0 >= cfg.right_ns) {     // long still press: right click
                 emit(GestureAction::RightDown, sx, sy);
+                emit(GestureAction::RightUp, sx, sy);   // released at once: the menu stays open
                 st = State::RightHeld;
             }
             break;
@@ -182,6 +183,7 @@ public:
                 if (x != lx || y != ly) { emit(GestureAction::Move, x, y); lx = x; ly = y; }
             } else if (t_ns - t0 >= cfg.right_ns) {            // long press: Dock menu
                 emit(GestureAction::RightDown, sx, sy);
+                emit(GestureAction::RightUp, sx, sy);
                 st = State::RightHeld;
             }
             break;
@@ -207,9 +209,8 @@ public:
             if (x != lx || y != ly) { emit(GestureAction::DragMove, x, y); lx = x; ly = y; }
             break;
 
-        case State::RightHeld:
+        case State::RightHeld:                   // menu is open: wait for the finger to lift
             if (!touching) {
-                emit(GestureAction::RightUp, sx, sy);
                 st = State::Idle;
                 tap_waiting = false;
             }
@@ -225,7 +226,6 @@ public:
         switch (st) {
         case State::Scrolling: emit(GestureAction::ScrollEnd, lx, ly); break;
         case State::Dragging:  emit(GestureAction::LeftUp, lx, ly); break;
-        case State::RightHeld: emit(GestureAction::RightUp, sx, sy); break;
         default: break;
         }
         st = State::Idle;

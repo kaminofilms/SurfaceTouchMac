@@ -1,0 +1,80 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Re-signs SurfaceTouchKeys.app with a signing key made on THIS Mac, so that
+# macOS keeps the keyboard's Accessibility permission after updates.
+#
+# Why: the app is not signed by a paid Apple Developer ID. With a throwaway
+# (ad-hoc) signature every new build looks like a different app to macOS and
+# the permission silently stops working. Signing every build with the same
+# key keeps the app's identity stable. The permission itself is still granted
+# by the user in System Settings; nothing here touches privacy settings.
+#
+# The key is created once, here, and never leaves this Mac. It is kept in a
+# root-only keychain under /Library/SurfaceTouchMac/Signing. If anything
+# fails the app keeps its ad-hoc signature (the previous behaviour).
+#
+#   stm-local-sign [path/to/SurfaceTouchKeys.app]      (run as root)
+set -u
+APP="${1:-/Applications/SurfaceTouchKeys.app}"
+DIR="${STM_SIGN_DIR:-/Library/SurfaceTouchMac/Signing}"
+KC="$DIR/stm-signing.keychain-db"
+PASSF="$DIR/keychain-password"
+NAME="SurfaceTouchMac Local Signing"
+BUNDLE_ID=com.kaminofilms.surfacetouchkeys
+OPENSSL=/usr/bin/openssl          # macOS LibreSSL (its PKCS#12 output imports cleanly)
+
+adhoc() {
+  echo "local signing: $1; keeping the ad-hoc signature"
+  codesign --force --options runtime --sign - --identifier "$BUNDLE_ID" "$APP" >/dev/null 2>&1 || true
+  exit 0
+}
+
+[ -d "$APP" ] || { echo "local signing: $APP not found"; exit 0; }
+umask 077
+mkdir -p "$DIR" && chmod 700 "$DIR" || adhoc "cannot create $DIR"
+
+if [ ! -f "$KC" ] || [ ! -s "$PASSF" ]; then
+  rm -f "$KC" "$PASSF"
+  "$OPENSSL" rand -hex 32 > "$PASSF" || adhoc "no random password"
+  tmp="$(mktemp -d)"
+  trap 'rm -rf "$tmp"' EXIT
+  cat > "$tmp/req.cnf" <<EOF
+[req]
+distinguished_name = dn
+x509_extensions = ext
+prompt = no
+[dn]
+CN = $NAME
+[ext]
+basicConstraints = critical,CA:false
+keyUsage = critical,digitalSignature
+extendedKeyUsage = critical,codeSigning
+subjectKeyIdentifier = hash
+EOF
+  "$OPENSSL" req -x509 -newkey rsa:2048 -nodes -sha256 -days 7300 \
+    -keyout "$tmp/key.pem" -out "$tmp/cert.pem" -config "$tmp/req.cnf" >/dev/null 2>&1 || adhoc "certificate creation failed"
+  "$OPENSSL" pkcs12 -export -inkey "$tmp/key.pem" -in "$tmp/cert.pem" -name "$NAME" \
+    -out "$tmp/id.p12" -passout "file:$PASSF" >/dev/null 2>&1 || adhoc "PKCS#12 export failed"
+  P="$(cat "$PASSF")"
+  security create-keychain -p "$P" "$KC" >/dev/null 2>&1 || adhoc "keychain creation failed"
+  security set-keychain-settings "$KC"                       # no auto-lock
+  security import "$tmp/id.p12" -k "$KC" -P "$P" -T /usr/bin/codesign >/dev/null 2>&1 || adhoc "key import failed"
+  # allow codesign to use the key without a GUI prompt (this keychain only)
+  security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$P" "$KC" >/dev/null 2>&1 || true
+  rm -rf "$tmp"
+  echo "local signing: created a signing key for this Mac"
+fi
+
+P="$(cat "$PASSF")"
+security unlock-keychain -p "$P" "$KC" >/dev/null 2>&1 || adhoc "keychain unlock failed"
+HASH="$(security find-identity -p codesigning "$KC" 2>/dev/null | awk -v n="\"$NAME\"" 'index($0, n) {print $2; exit}')"
+[ -n "$HASH" ] || { security lock-keychain "$KC"; adhoc "signing identity not found"; }
+
+if codesign --force --options runtime --sign "$HASH" --keychain "$KC" --identifier "$BUNDLE_ID" "$APP" >/dev/null 2>&1 &&
+   codesign --verify --strict "$APP" >/dev/null 2>&1; then
+  security lock-keychain "$KC"
+  echo "local signing: signed $APP ($HASH)"
+  exit 0
+fi
+security lock-keychain "$KC"
+adhoc "codesign failed"

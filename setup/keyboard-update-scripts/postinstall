@@ -4,6 +4,8 @@
 LOG=/Library/Logs/SurfaceTouchMac-setup.log
 exec >>"$LOG" 2>&1
 echo "=== $(date '+%Y-%m-%d %H:%M:%S') SurfaceTouchKeys update"
+# keep the keyboard's identity stable so its Accessibility permission survives updates
+"$(dirname "$0")/stm-local-sign" /Applications/SurfaceTouchKeys.app || true
 user="$(stat -f%Su /dev/console)"
 if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
   uid="$(id -u "$user")"

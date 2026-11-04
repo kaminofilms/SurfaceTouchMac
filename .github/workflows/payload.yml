@@ -28,7 +28,7 @@ jobs:
           git -C /tmp/hid apply --check "$PWD/kext/patches/0002-SurfaceTouchscreen-ipad-style-gestures.patch"
           echo "patch applies cleanly"
       - name: Shell syntax
-        run: for f in $(git ls-files '*.sh') setup/scripts/preinstall setup/scripts/postinstall; do bash -n "$f" && echo "ok $f"; done
+        run: for f in $(git ls-files '*.sh') setup/scripts/preinstall setup/scripts/postinstall setup/*/postinstall setup/common/stm-local-sign; do bash -n "$f" && echo "ok $f"; done
 
   macos-build:
     # Native Intel runner = same CPU architecture as the Surface Pro 7
@@ -70,6 +70,26 @@ jobs:
         run: bash iptsd/build_iptsd.sh
       - name: Installer package
         run: bash setup/build_pkg.sh
+      - name: Local signing keeps the keyboard's identity stable across builds
+        continue-on-error: true
+        run: |
+          set +e
+          D="$RUNNER_TEMP/stmsign"; A1="$RUNNER_TEMP/b1/SurfaceTouchKeys.app"; A2="$RUNNER_TEMP/b2/SurfaceTouchKeys.app"
+          mkdir -p "$RUNNER_TEMP/b1" "$RUNNER_TEMP/b2"
+          ditto keyboard/dist/SurfaceTouchKeys.app "$A1"; ditto keyboard/dist/SurfaceTouchKeys.app "$A2"
+          # make the second copy look like a different build
+          plutil -replace CFBundleVersion -string 999999 "$A2/Contents/Info.plist"
+          sudo env STM_SIGN_DIR="$D" bash setup/common/stm-local-sign "$A1"
+          sudo env STM_SIGN_DIR="$D" bash setup/common/stm-local-sign "$A2"
+          r1="$(codesign -d -r- "$A1" 2>&1 | grep designated)"; r2="$(codesign -d -r- "$A2" 2>&1 | grep designated)"
+          echo "build 1: $r1"; echo "build 2: $r2"
+          req="${r1#designated => }"
+          ok=1
+          grep -q "certificate leaf" <<<"$r1" || { echo "CHECK local_sign_identity FAIL (not signed with the local key)"; ok=0; }
+          codesign --verify --strict -R="$req" "$A2" && echo "CHECK local_sign_same_identity PASS" || { echo "CHECK local_sign_same_identity FAIL"; ok=0; }
+          "$A2/Contents/MacOS/SurfaceTouchKeys" --version && echo "CHECK local_signed_app_runs PASS" || { echo "CHECK local_signed_app_runs FAIL"; ok=0; }
+          sudo ls -l "$D"
+          test $ok -eq 1
       - name: stm-setup refuses on non-Surface hardware (safety check on the runner)
         run: |
           set +e

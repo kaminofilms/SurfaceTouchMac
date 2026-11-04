@@ -96,6 +96,27 @@ static void test_long_hold_right_clicks() {
     CHECK(r.count(A::LeftDown) == 0, "long press also left-clicked");
 }
 
+static void test_right_click_released_before_lift() {
+    // the menu must open while the finger is still down and stay open after lifting
+    Rec r;
+    r.at(0, true, 20000, 20000);
+    for (int t = 50; t <= 700; t += 50) r.at(t, true, 20000, 20000);
+    CHECK(r.count(A::RightDown) == 1 && r.count(A::RightUp) == 1, "right click not complete while held");
+    size_t before = r.ev.size();
+    for (int t = 750; t <= 1500; t += 50) r.at(t, true, 20000, 20000);
+    r.at(1550, false, 20000, 20000);
+    CHECK(r.ev.size() == before, "events after the menu opened (%zu)", r.ev.size() - before);
+}
+
+static void test_hold_with_finger_jitter_right_clicks() {
+    // a real finger wobbles by about a millimetre while held
+    Rec r;
+    r.at(0, true, 20000, 20000);
+    for (int t = 8, i = 0; t <= 800; t += 8, i++) r.at(t, true, 20000 + (i % 3 - 1) * mmx(1), 20000 + (i % 2) * mmy(1));
+    r.at(808, false, 20000, 20000);
+    CHECK(r.count(A::RightDown) == 1 && r.count(A::LeftDown) == 0 && r.count(A::ScrollBegin) == 0, "jittery hold");
+}
+
 static void test_hold_between_350_and_650_is_click() {
     Rec r;
     r.at(0, true, 20000, 20000);
@@ -259,6 +280,8 @@ int main() {
     test_scroll_vertical_follows_finger();
     test_hold_then_move_drags();
     test_long_hold_right_clicks();
+    test_right_click_released_before_lift();
+    test_hold_with_finger_jitter_right_clicks();
     test_hold_between_350_and_650_is_click();
     test_double_tap_snaps_to_first();
     test_far_or_late_second_tap_not_snapped();

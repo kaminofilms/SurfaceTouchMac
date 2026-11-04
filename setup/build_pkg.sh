@@ -30,7 +30,7 @@ fi
 find "$R" -name .DS_Store -delete
 find "$R" -type d -empty -delete
 
-cp "$HERE/scripts/preinstall" "$HERE/scripts/postinstall" "$OUT/scripts/"
+cp "$HERE/scripts/preinstall" "$HERE/scripts/postinstall" "$HERE/common/stm-local-sign" "$OUT/scripts/"
 cp "$ROOT/keyboard/dist/stm-setup" "$OUT/scripts/"
 chmod 755 "$OUT/scripts/"*
 
@@ -78,8 +78,8 @@ echo "== keyboard-only update package"
 KU="$OUT/kbupdate"
 rm -rf "$KU" && mkdir -p "$KU/root/Applications" "$KU/scripts"
 cp -R "$ROOT/keyboard/dist/SurfaceTouchKeys.app" "$KU/root/Applications/"
-cp "$HERE/keyboard-update-scripts/postinstall" "$KU/scripts/"
-chmod 755 "$KU/scripts/postinstall"
+cp "$HERE/keyboard-update-scripts/postinstall" "$HERE/common/stm-local-sign" "$KU/scripts/"
+chmod 755 "$KU/scripts/"*
 pkgbuild --root "$KU/root" --scripts "$KU/scripts" --identifier com.kaminofilms.surfacetouchkeys.update \
   --version "$VERSION" --install-location / "$OUT/SurfaceTouchKeys-Update.pkg"
 pkgutil --payload-files "$OUT/SurfaceTouchKeys-Update.pkg" | awk 'NR<=5'
@@ -91,8 +91,8 @@ rm -rf "$UP" && mkdir -p "$UP/root/Applications" "$UP/root/Library/SurfaceTouchM
 cp -R "$ROOT/keyboard/dist/SurfaceTouchKeys.app" "$UP/root/Applications/"
 cp -R "$ROOT/kext/build/BigSurface.kext" "$UP/root/Library/SurfaceTouchMac/update/"
 cp "$ROOT/keyboard/dist/stm-setup" "$UP/root/Library/SurfaceTouchMac/bin/"
-cp "$HERE/update-scripts/postinstall" "$UP/scripts/"
-chmod 755 "$UP/scripts/postinstall"
+cp "$HERE/update-scripts/postinstall" "$HERE/common/stm-local-sign" "$UP/scripts/"
+chmod 755 "$UP/scripts/"*
 pkgbuild --root "$UP/root" --scripts "$UP/scripts" --identifier com.kaminofilms.surfacetouchmac.update \
   --version "$VERSION" --install-location / "$OUT/SurfaceTouchMac-Update.pkg"
 pkgutil --payload-files "$OUT/SurfaceTouchMac-Update.pkg" | grep -E "SurfaceTouchKeys.app$|BigSurface.kext$|stm-setup$"
