@@ -123,6 +123,13 @@ final class EdgeSwipeTests: XCTestCase {
         XCTAssertNil(d.add(dx: 200, dy: 0))             // sideways movement doesn't count for bottom
     }
 
+    func testSwipeUpFromAnywhereInDockBand() {
+        var d = EdgeSwipeDetector()
+        XCTAssertTrue(d.begin(at: (600, 55), screen: screen, menuBarHeight: 25))   // 912 * 7% = 63.8
+        XCTAssertEqual(d.edge, .bottom)
+        XCTAssertFalse(d.begin(at: (600, 80), screen: screen, menuBarHeight: 25))
+    }
+
     func testMiddleIsNotAnEdge() {
         var d = EdgeSwipeDetector()
         XCTAssertFalse(d.begin(at: (600, 400), screen: screen, menuBarHeight: 25))

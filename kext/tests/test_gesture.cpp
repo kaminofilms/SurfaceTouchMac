@@ -172,7 +172,87 @@ static void test_random_sequences_never_leave_button_down() {
     CHECK(true, "fuzz");
 }
 
+static const int DOCK_Y = 64000;   // inside the bottom 7% band
+
+static void test_dock_slide_hovers_and_magnifies() {
+    Rec r;
+    r.at(0, true, 20000, DOCK_Y);
+    for (int i = 1; i <= 20; i++) r.at(i * 16, true, 20000 + i * mmx(3), DOCK_Y);
+    r.at(400, false, 20000 + 20 * mmx(3), DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 0 && r.count(A::RightDown) == 0, "dock slide clicked");
+    CHECK(r.count(A::ScrollBegin) == 0, "dock slide scrolled");
+    CHECK(r.count(A::Move) >= 15, "pointer did not follow finger (%d moves)", r.count(A::Move));
+}
+
+static void test_dock_single_tap_does_not_open() {
+    Rec r;
+    r.at(0, true, 30000, DOCK_Y);
+    r.at(60, false, 30000, DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 0, "single dock tap opened the app");
+    CHECK(r.count(A::Move) == 1, "no magnify move");
+}
+
+static void test_dock_double_tap_opens_once() {
+    Rec r;
+    r.at(0, true, 30000, DOCK_Y);   r.at(60, false, 30000, DOCK_Y);
+    r.at(250, true, 30000 + mmx(2), DOCK_Y); r.at(310, false, 30000 + mmx(2), DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 1 && r.count(A::LeftUp) == 1, "double tap clicks=%d", r.count(A::LeftDown));
+    // a third tap right after starts a new pair (does not open again)
+    r.at(450, true, 30000, DOCK_Y); r.at(500, false, 30000, DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 1, "third tap opened again");
+}
+
+static void test_dock_taps_on_different_icons_dont_open() {
+    Rec r;
+    r.at(0, true, 20000, DOCK_Y);   r.at(60, false, 20000, DOCK_Y);
+    r.at(250, true, 20000 + mmx(40), DOCK_Y); r.at(310, false, 20000 + mmx(40), DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 0, "taps on two icons opened one");
+}
+
+static void test_dock_slide_then_tap_needs_double() {
+    Rec r;
+    r.at(0, true, 20000, DOCK_Y);
+    for (int i = 1; i <= 5; i++) r.at(i * 16, true, 20000 + i * mmx(3), DOCK_Y);
+    r.at(100, false, 20000 + 5 * mmx(3), DOCK_Y);
+    r.at(200, true, 20000 + 5 * mmx(3), DOCK_Y); r.at(260, false, 20000 + 5 * mmx(3), DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 0, "slide + one tap opened");
+    r.at(400, true, 20000 + 5 * mmx(3), DOCK_Y); r.at(460, false, 20000 + 5 * mmx(3), DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 1, "double tap after slide did not open");
+}
+
+static void test_dock_swipe_up_is_edge_swipe() {
+    Rec r;
+    r.at(0, true, 30000, 65000);
+    for (int i = 1; i <= 8; i++) r.at(i * 16, true, 30000, 65000 - i * mmy(4));
+    r.at(200, false, 30000, 65000 - 8 * mmy(4));
+    CHECK(r.count(A::ScrollBegin) == 1 && r.count(A::ScrollEnd) == 1, "no edge swipe");
+    CHECK(r.count(A::LeftDown) == 0, "edge swipe clicked");
+}
+
+static void test_dock_long_press_menu() {
+    Rec r;
+    r.at(0, true, 30000, DOCK_Y);
+    for (int t = 100; t <= 800; t += 100) r.at(t, true, 30002, DOCK_Y);
+    r.at(900, false, 30002, DOCK_Y);
+    CHECK(r.count(A::RightDown) == 1 && r.count(A::RightUp) == 1 && r.count(A::LeftDown) == 0, "dock menu");
+}
+
+static void test_dock_off_means_normal_tap() {
+    GestureConfig c; c.dock_edge = 3;
+    Rec r; r.g.setConfig(c);
+    r.at(0, true, 30000, DOCK_Y); r.at(60, false, 30000, DOCK_Y);
+    CHECK(r.count(A::LeftDown) == 1, "dock off: tap should click");
+}
+
 int main() {
+    test_dock_slide_hovers_and_magnifies();
+    test_dock_single_tap_does_not_open();
+    test_dock_double_tap_opens_once();
+    test_dock_taps_on_different_icons_dont_open();
+    test_dock_slide_then_tap_needs_double();
+    test_dock_swipe_up_is_edge_swipe();
+    test_dock_long_press_menu();
+    test_dock_off_means_normal_tap();
     test_tap_clicks_once();
     test_very_quick_tap_still_clicks();
     test_no_hover_or_press_while_sliding();

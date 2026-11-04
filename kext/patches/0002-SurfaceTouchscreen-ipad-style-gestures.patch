@@ -1,5 +1,5 @@
 diff --git a/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp b/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp
-index a5eaf01..36bc0de 100644
+index a5eaf01..9aab315 100644
 --- a/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp
 +++ b/BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp
 @@ -7,6 +7,7 @@
@@ -10,7 +10,7 @@ index a5eaf01..36bc0de 100644
  
  #define super VoodooI2CMultitouchHIDEventDriver
  OSDefineMetaClassAndStructors(SurfaceTouchscreenHIDEventDriver, VoodooI2CMultitouchHIDEventDriver);
-@@ -131,6 +132,101 @@ bool SurfaceTouchscreenHIDEventDriver::checkFingerTouch(AbsoluteTime timestamp,
+@@ -131,6 +132,108 @@ bool SurfaceTouchscreenHIDEventDriver::checkFingerTouch(AbsoluteTime timestamp,
      return got_transducer;
  }
  
@@ -29,6 +29,13 @@ index a5eaf01..36bc0de 100644
 +    v = 0;
 +    if (PE_parse_boot_argn("stmscrollspeed", &v, sizeof(v)) && v >= 25 && v <= 400)
 +        cfg.scroll_um_per_pt = (stm::g_i32)(cfg.scroll_um_per_pt * 100 / v);   // percent
++    // Dock: stmdock=0 bottom (default), 1 left, 2 right, 3 off; stmdockzone=permille of the screen
++    v = 0;
++    if (PE_parse_boot_argn("stmdock", &v, sizeof(v)) && v <= 3)
++        cfg.dock_edge = (stm::g_i32)v;
++    v = 0;
++    if (PE_parse_boot_argn("stmdockzone", &v, sizeof(v)) && v >= 20 && v <= 250)
++        cfg.dock_zone_permille = (stm::g_i32)v;
 +    gesture.setConfig(cfg);
 +    IOLog("%s::SurfaceTouchMac gestures %s\n", getName(), stm_gestures ? "enabled" : "disabled (legacy touch)");
 +}
@@ -112,7 +119,7 @@ index a5eaf01..36bc0de 100644
  void SurfaceTouchscreenHIDEventDriver::checkRotation(IOFixed* x, IOFixed* y) {
      if (active_framebuffer) {
          if (current_rotation & kIOFBSwapAxes) {
-@@ -223,11 +319,26 @@ void SurfaceTouchscreenHIDEventDriver::forwardReport(VoodooI2CMultitouchEvent ev
+@@ -223,11 +326,26 @@ void SurfaceTouchscreenHIDEventDriver::forwardReport(VoodooI2CMultitouchEvent ev
      }
      
      if (event.contact_count > 0) {
@@ -141,7 +148,7 @@ index a5eaf01..36bc0de 100644
      }
  }
  
-@@ -236,6 +347,7 @@ bool SurfaceTouchscreenHIDEventDriver::handleStart(IOService* provider) {
+@@ -236,6 +354,7 @@ bool SurfaceTouchscreenHIDEventDriver::handleStart(IOService* provider) {
          return false;
      
      active_framebuffer = getFramebuffer();

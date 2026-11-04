@@ -15,7 +15,7 @@ if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
     launchctl bootout "gui/$uid/com.kaminofilms.surfacetouchkeys" 2>/dev/null || true
     launchctl bootstrap "gui/$uid" /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist
   fi
-  launchctl asuser "$uid" sudo -u "$user" osascript -e 'display dialog "Touch update installed.\n\nRestart the Surface to use the new touch:\n• tap = click\n• slide = scroll\n• touch, hold, then move = drag\n• hold = right-click\n\nThe pointer hides while you use touch. Swipe in from the screen edges for Notification Center (top), Mission Control (bottom) and desktops (sides)." buttons {"OK"} default button 1 with title "SurfaceTouchMac"' >/dev/null 2>&1 || true
+  launchctl asuser "$uid" sudo -u "$user" osascript -e 'display dialog "Touch update installed.\n\nRestart the Surface to use the new touch:\n• tap = click\n• slide = scroll\n• touch, hold, then move = drag\n• hold = right-click\n\nDock: slide your finger along it to magnify, double-tap an icon to open it.\n\nThe pointer hides while you use touch. Swipe in from the screen edges for Notification Center (top), Mission Control (up from the Dock) and desktops (sides)." buttons {"OK"} default button 1 with title "SurfaceTouchMac"' >/dev/null 2>&1 || true
 fi
 echo "update finished"
 exit 0

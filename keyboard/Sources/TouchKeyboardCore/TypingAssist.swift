@@ -140,6 +140,7 @@ public enum ScreenEdge: Equatable, Sendable { case top, bottom, left, right }
 
 public struct EdgeSwipeDetector: Sendable {
     public var edgeZone = 22.0       // start this close to an edge (points)
+    public var bottomZoneFraction = 0.07   // the Dock band (matches the touch driver)
     public var trigger = 70.0        // inward distance that fires the action
     public private(set) var edge: ScreenEdge?
     private var travel = 0.0
@@ -153,7 +154,7 @@ public struct EdgeSwipeDetector: Sendable {
         travel = 0; fired = false; edge = nil
         let (x, y) = p
         if y >= screen.maxY - edgeZone - menuBarHeight && y <= screen.maxY { edge = .top }
-        else if y <= screen.y + edgeZone { edge = .bottom }
+        else if y <= screen.y + max(edgeZone, screen.height * bottomZoneFraction) { edge = .bottom }
         else if x <= screen.x + edgeZone { edge = .left }
         else if x >= screen.maxX - edgeZone { edge = .right }
         return edge != nil

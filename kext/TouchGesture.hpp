@@ -12,6 +12,14 @@
 //   hold still longer        -> right click (context menu)
 //   two taps                 -> double click (2nd tap snapped onto the 1st)
 //
+// In the Dock band along the bottom (or side) edge it works like a mouse
+// hovering, as requested:
+//   slide along the Dock     -> pointer follows the finger, Dock magnifies
+//   single tap               -> magnify only, nothing opens
+//   double tap               -> opens the app (one click on the second tap)
+//   slide up/away from Dock  -> edge swipe (scroll gesture)
+//   hold                     -> right click (Dock menu)
+//
 // Integer-only, no allocation, no libc: used inside the kext and compiled on a
 // host for unit tests. Coordinates are 0..65535 across the screen.
 //
@@ -38,6 +46,10 @@ struct GestureConfig {
     g_i32 double_tap_um    = 7000;      // ...and this distance is snapped onto the 1st
     g_i32 scroll_um_per_pt = 190;       // ~5.3 points per mm on the Surface Pro 7 at 200%
     g_i32 scroll_sign      = 1;         // -1 inverts (boot-arg stmscrollinv=1)
+    g_i32 dock_edge        = 0;         // 0 bottom, 1 left, 2 right, 3 off (boot-arg stmdock)
+    g_i32 dock_zone_permille = 70;      // Dock band = 7% of the screen (boot-arg stmdockzone)
+    g_u64 dock_double_ns   = 600000000; // two taps within this time open the app
+    g_i32 dock_double_um   = 12000;     // ...if within 12 mm of each other
 };
 
 enum class GestureAction : g_u8 {
@@ -63,7 +75,7 @@ class TouchGesture {
 public:
     static const g_u32 kMaxOut = 4;
 
-    enum class State : g_u8 { Idle, Pending, Scrolling, Dragging, RightHeld };
+    enum class State : g_u8 { Idle, Pending, Scrolling, Dragging, RightHeld, DockPending };
 
     explicit TouchGesture(const GestureConfig &c = GestureConfig()) : cfg(c) {}
 
@@ -78,10 +90,17 @@ public:
         switch (st) {
         case State::Idle:
             if (!touching) break;
+            if (inDock(x, y)) {
+                st = State::DockPending;
+                t0 = t_ns; sx = x; sy = y; lx = x; ly = y;
+                dock_moved = false;
+                emit(GestureAction::Move, x, y);
+                break;
+            }
             st = State::Pending;
             t0 = t_ns; sx = x; sy = y; lx = x; ly = y;
             // snap a second tap onto the first one so macOS sees a double click
-            if (t_ns - last_tap_t <= cfg.double_tap_ns && dist_um(x, y, tapx, tapy) <= cfg.double_tap_um) {
+            if (tap_waiting && t_ns - last_tap_t <= cfg.double_tap_ns && dist_um(x, y, tapx, tapy) <= cfg.double_tap_um) {
                 sx = tapx; sy = tapy;
             }
             emit(GestureAction::Move, sx, sy);
@@ -91,7 +110,7 @@ public:
             if (!touching) {                     // quick tap
                 emit(GestureAction::LeftDown, sx, sy);
                 emit(GestureAction::LeftUp, sx, sy);
-                last_tap_t = t_ns; tapx = sx; tapy = sy;
+                last_tap_t = t_ns; tapx = sx; tapy = sy; tap_waiting = true;
                 st = State::Idle;
                 break;
             }
@@ -114,11 +133,65 @@ public:
             }
             break;
 
+        case State::DockPending: {
+            if (!touching) {
+                if (!dock_moved) {
+                    if (dock_tap_waiting && t_ns - last_dock_tap_t <= cfg.dock_double_ns &&
+                        dist_um(sx, sy, dtx, dty) <= cfg.dock_double_um) {
+                        // second tap: open
+                        emit(GestureAction::LeftDown, sx, sy);
+                        emit(GestureAction::LeftUp, sx, sy);
+                        dock_tap_waiting = false;
+                    } else {
+                        // first tap: magnify only
+                        dock_tap_waiting = true;
+                        last_dock_tap_t = t_ns; dtx = sx; dty = sy;
+                    }
+                } else {
+                    dock_tap_waiting = false;
+                }
+                st = State::Idle;
+                tap_waiting = false;
+                break;
+            }
+            g_i64 away = 0, along = 0;
+            switch (cfg.dock_edge) {
+                case 0:  away = um_y(sy - y); along = um_x(x - sx); break;
+                case 1:  away = um_x(x - sx); along = um_y(y - sy); break;
+                default: away = um_x(sx - x); along = um_y(y - sy); break;
+            }
+            if (along < 0) along = -along;
+            if (away > cfg.slop_um && away > along) {          // swipe away from the Dock
+                st = State::Scrolling;
+                rem_x = rem_y = 0;
+                lx = sx; ly = sy;
+                scroll(GestureAction::ScrollBegin, x, y);
+                break;
+            }
+            if (dist_um(x, y, sx, sy) > cfg.slop_um) {
+                if (!dock_moved && t_ns - t0 >= cfg.hold_ns) {  // hold, then move: drag the icon
+                    emit(GestureAction::LeftDown, sx, sy);
+                    emit(GestureAction::DragMove, x, y);
+                    lx = x; ly = y;
+                    st = State::Dragging;
+                    break;
+                }
+                dock_moved = true;                              // sliding along: hover
+            }
+            if (dock_moved) {
+                if (x != lx || y != ly) { emit(GestureAction::Move, x, y); lx = x; ly = y; }
+            } else if (t_ns - t0 >= cfg.right_ns) {            // long press: Dock menu
+                emit(GestureAction::RightDown, sx, sy);
+                st = State::RightHeld;
+            }
+            break;
+        }
+
         case State::Scrolling:
             if (!touching) {
                 emit(GestureAction::ScrollEnd, lx, ly);
                 st = State::Idle;
-                last_tap_t = 0;
+                tap_waiting = false;
                 break;
             }
             scroll(GestureAction::Scroll, x, y);
@@ -128,7 +201,7 @@ public:
             if (!touching) {
                 emit(GestureAction::LeftUp, lx, ly);
                 st = State::Idle;
-                last_tap_t = 0;
+                tap_waiting = false;
                 break;
             }
             if (x != lx || y != ly) { emit(GestureAction::DragMove, x, y); lx = x; ly = y; }
@@ -138,7 +211,7 @@ public:
             if (!touching) {
                 emit(GestureAction::RightUp, sx, sy);
                 st = State::Idle;
-                last_tap_t = 0;
+                tap_waiting = false;
             }
             break;
         }
@@ -156,7 +229,7 @@ public:
         default: break;
         }
         st = State::Idle;
-        last_tap_t = 0;
+        tap_waiting = false;
         return n;
     }
 
@@ -166,6 +239,21 @@ private:
     g_u64 t0 = 0, last_tap_t = 0;
     g_i32 sx = 0, sy = 0, lx = 0, ly = 0, tapx = 0, tapy = 0;
     g_i64 rem_x = 0, rem_y = 0;   // sub-point remainder, in um
+    bool dock_moved = false;
+    bool dock_tap_waiting = false;
+    bool tap_waiting = false;
+    g_u64 last_dock_tap_t = 0;
+    g_i32 dtx = 0, dty = 0;
+
+    bool inDock(g_i32 x, g_i32 y) const {
+        const g_i32 zone = (g_i32)((g_i64)65535 * cfg.dock_zone_permille / 1000);
+        switch (cfg.dock_edge) {
+            case 0: return y >= 65535 - zone;
+            case 1: return x <= zone;
+            case 2: return x >= 65535 - zone;
+            default: return false;
+        }
+    }
     g_u32 n = 0;
     GestureEvent *o = nullptr;
 
