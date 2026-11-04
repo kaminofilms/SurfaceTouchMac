@@ -70,11 +70,20 @@ security unlock-keychain -p "$P" "$KC" >/dev/null 2>&1 || adhoc "keychain unlock
 HASH="$(security find-identity -p codesigning "$KC" 2>/dev/null | awk -v n="\"$NAME\"" 'index($0, n) {print $2; exit}')"
 [ -n "$HASH" ] || { security lock-keychain "$KC"; adhoc "signing identity not found"; }
 
-if codesign --force --options runtime --sign "$HASH" --keychain "$KC" --identifier "$BUNDLE_ID" "$APP" >/dev/null 2>&1 &&
-   codesign --verify --strict "$APP" >/dev/null 2>&1; then
-  security lock-keychain "$KC"
-  echo "local signing: signed $APP ($HASH)"
-  exit 0
+# codesign only finds the key while its keychain is on the search list:
+# add it for the duration of the signing, then put the list back as it was.
+old_list=()
+while IFS= read -r k; do
+  k="${k#"${k%%[![:space:]]*}"}"; k="${k#\"}"; k="${k%\"}"
+  [ -n "$k" ] && [ "$k" != "$KC" ] && old_list+=("$k")
+done < <(security list-keychains -d user 2>/dev/null)
+security list-keychains -d user -s "$KC" ${old_list[@]+"${old_list[@]}"} >/dev/null 2>&1
+signed=0
+if codesign --force --options runtime --sign "$HASH" --keychain "$KC" --identifier "$BUNDLE_ID" "$APP"; then
+  codesign -d -r- "$APP" 2>&1 | grep -q "certificate leaf" && signed=1
 fi
+security list-keychains -d user -s ${old_list[@]+"${old_list[@]}"} >/dev/null 2>&1
 security lock-keychain "$KC"
-adhoc "codesign failed"
+[ $signed -eq 1 ] || adhoc "codesign failed"
+echo "local signing: signed $APP ($HASH)"
+exit 0
