@@ -85,6 +85,7 @@ jobs:
           cp -R efi/build/EFI $P/
           cp efi/build/ocvalidate efi/build/macserial $P/
           cp setup/build/SurfaceTouchMac-Setup.pkg $P/
+          cp setup/build/SurfaceTouchKeys-Update.pkg $P/
           cp efi/build/efi-report.txt efi/build/efi-manifest.json $P/logs/
           cp kext/build/xcodebuild.log $P/logs/bigsurface-xcodebuild.log
           cp keyboard/dist/keyboard-ci.log keyboard/dist-tests.log $P/logs/ 2>/dev/null || true
@@ -116,6 +117,6 @@ jobs:
         run: |
           TAG=payload-latest
           gh release delete "$TAG" -y --cleanup-tag 2>/dev/null || true
-          gh release create "$TAG" SurfaceTouchMac-payload.zip SurfaceTouchMac-payload.zip.sha256 \
+          gh release create "$TAG" SurfaceTouchMac-payload.zip SurfaceTouchMac-payload.zip.sha256 setup/build/SurfaceTouchKeys-Update.pkg \
             --title "Payload ${STM_VERSION} (${GITHUB_SHA::7})" --prerelease \
             --notes "Open-source parts only (OpenCore EFI for Surface Pro 7 with SMBIOS placeholders, BigSurface with kernel multitouch, SurfaceTouchKeys, setup package). No Apple software. Not tested on a physical Surface by CI."

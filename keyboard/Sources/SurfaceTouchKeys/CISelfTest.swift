@@ -61,6 +61,24 @@ enum CISelfTest {
         report("surface_pro7_metrics", m.width <= 1368 && m.height <= 0.45 * 887 && m.keyHeight >= 44,
                "unit=\(Int(m.unit)) keyH=\(Int(m.keyHeight)) size=\(Int(m.width))x\(Int(m.height))")
 
+        // floating / resizable / transparent
+        kb.toggleMode()
+        let fl = kb.panel.frame
+        let fkeys = allKeyViews(kb)
+        report("floating_mode", kb.settings.mode == .floating && vf.contains(fl),
+               "frame=\(fl) width=\(Int(kb.settings.floatWidth))")
+        report("floating_keys_usable", (fkeys.map { $0.frame.height }.min() ?? 0) >= 26, "keys=\(fkeys.count)")
+        kb.dragMoved(to: NSPoint(x: vf.minX - 500, y: vf.maxY + 500))
+        report("drag_clamped_on_screen", vf.contains(kb.panel.frame), "frame=\(kb.panel.frame)")
+        kb.resizeBegan(); kb.resizeMoved(dx: -2000); kb.resizeEnded()
+        report("resize_min_width", abs(Double(kb.panel.frame.width) - KeyboardSettings.minWidth) < 2,
+               "width=\(Int(kb.panel.frame.width))")
+        kb.cycleOpacity()
+        report("opacity_applies", abs(kb.panel.alphaValue - 0.85) < 0.01, "alpha=\(kb.panel.alphaValue)")
+        for _ in 0..<3 { kb.cycleOpacity() }          // back to 100%
+        kb.toggleMode()                               // back to docked (saved for the next run)
+        report("docked_restored", kb.settings.mode == .docked && abs(kb.panel.alphaValue - 1) < 0.01)
+
         if !interactive {
             kb.hide()
             return failures == 0

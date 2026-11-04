@@ -540,12 +540,10 @@ private:
             f.id = cur[i].id;
             toLogical(cur[i], f.x, f.y);
         }
-        for (u32 i = 0; i < lifted_count && k < kMaxFingers; i++) {
-            Finger &f = out.fingers[k++];
-            f.touch = false;
-            f.id = lifted[i].id;
-            toLogical(lifted[i], f.x, f.y);
-        }
+        // Lifted contacts are NOT reported: BigSurface's event driver treats
+        // contact_count > 1 as a multi-finger (trackpad) gesture, so an extra
+        // "lifted" entry turned single-finger touch into trackpad/mouse mode.
+        // IPTSDaemon reports only fingers on the screen; lifts are implied.
         out.count = (u8)k;
     }
 };

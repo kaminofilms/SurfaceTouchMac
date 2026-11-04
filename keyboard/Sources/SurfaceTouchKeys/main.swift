@@ -114,6 +114,77 @@ final class KeyboardPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
+// MARK: - Toolbar: drag bar, opacity, dock/float, resize grip
+
+/// Small button that works on the first touch without activating the panel.
+final class BarButton: NSButton {
+    var onTap: (() -> Void)?
+    convenience init(_ title: String, label: String, onTap: @escaping () -> Void) {
+        self.init(title: title, target: nil, action: nil)
+        self.onTap = onTap
+        target = self
+        action = #selector(fire)
+        isBordered = false
+        font = .systemFont(ofSize: 17, weight: .semibold)
+        contentTintColor = .labelColor
+        setAccessibilityLabel(label)
+    }
+    @objc private func fire() { onTap?() }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
+/// Drag anywhere on the bar to move the keyboard (undocks it if docked).
+final class DragBar: NSView {
+    weak var controller: KeyboardController?
+    private var startMouse = NSPoint.zero
+    private var startOrigin = NSPoint.zero
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override func draw(_ dirtyRect: NSRect) {
+        // grab handle in the middle, like iPad's floating keyboard
+        let w: CGFloat = 54, h: CGFloat = 5
+        let r = NSRect(x: bounds.midX - w / 2, y: bounds.midY - h / 2, width: w, height: h)
+        NSColor.secondaryLabelColor.withAlphaComponent(0.7).setFill()
+        NSBezierPath(roundedRect: r, xRadius: h / 2, yRadius: h / 2).fill()
+    }
+    override func mouseDown(with event: NSEvent) {
+        startMouse = NSEvent.mouseLocation
+        startOrigin = window?.frame.origin ?? .zero
+        controller?.dragBegan()
+        startOrigin = window?.frame.origin ?? startOrigin
+    }
+    override func mouseDragged(with event: NSEvent) {
+        let p = NSEvent.mouseLocation
+        controller?.dragMoved(to: NSPoint(x: startOrigin.x + p.x - startMouse.x, y: startOrigin.y + p.y - startMouse.y))
+    }
+    override func mouseUp(with event: NSEvent) { controller?.dragEnded() }
+}
+
+/// Drag left/right to resize; the keyboard's top-left corner stays put.
+final class ResizeGrip: NSView {
+    weak var controller: KeyboardController?
+    private var startMouseX: CGFloat = 0
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override func draw(_ dirtyRect: NSRect) {
+        let path = NSBezierPath()
+        for i in 0..<3 {
+            let o = CGFloat(6 + i * 6)
+            path.move(to: NSPoint(x: bounds.maxX - 6, y: bounds.minY + o))
+            path.line(to: NSPoint(x: bounds.maxX - o, y: bounds.minY + 6))
+        }
+        NSColor.secondaryLabelColor.setStroke()
+        path.lineWidth = 2
+        path.stroke()
+    }
+    override func mouseDown(with event: NSEvent) {
+        startMouseX = NSEvent.mouseLocation.x
+        controller?.resizeBegan()
+    }
+    override func mouseDragged(with event: NSEvent) {
+        controller?.resizeMoved(dx: Double(NSEvent.mouseLocation.x - startMouseX))
+    }
+    override func mouseUp(with event: NSEvent) { controller?.resizeEnded() }
+}
+
 // MARK: - Keyboard controller
 
 final class KeyboardController {
@@ -132,6 +203,21 @@ final class KeyboardController {
     var pinned = false           // shown with the floating button: no auto-hide
     private var currentScreen: NSScreen?
     private var lastField: Rect?
+    private(set) var settings: KeyboardSettings = {
+        let d = UserDefaults.standard.dictionary(forKey: "keyboardSettings") as? [String: String] ?? [:]
+        return KeyboardSettings.decode(d)
+    }()
+    private var resizeStart: (width: Double, top: Double, x: Double)?
+    private var opacityButton: BarButton?
+
+    private func saveSettings() {
+        UserDefaults.standard.set(settings.encode(), forKey: "keyboardSettings")
+    }
+
+    private func visibleRect(_ screen: NSScreen) -> Rect {
+        let vf = screen.visibleFrame
+        return Rect(x: Double(vf.minX), y: Double(vf.minY), width: Double(vf.width), height: Double(vf.height))
+    }
 
     init() {
         panel = KeyboardPanel(contentRect: .zero,
@@ -152,21 +238,54 @@ final class KeyboardController {
 
     private func rebuild(on screen: NSScreen) {
         let rows = Layouts.rows(for: state.layer)
-        let vf = screen.visibleFrame
-        let m = KeyboardGeometry.metrics(visibleWidth: Double(vf.width), visibleHeight: Double(vf.height),
-                                         maxUnits: Layouts.maxUnits(for: state.layer), rows: rows.count)
-        let root = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: m.width, height: m.height))
+        let units = Layouts.maxUnits(for: state.layer)
+        let visible = visibleRect(screen)
+        let bar = KeyboardSettings.toolbarHeight
+        let m: KeyboardMetrics
+        let totalHeight: Double
+        if settings.mode == .floating {
+            settings.floatWidth = FloatingGeometry.clampWidth(settings.floatWidth, visible: visible)
+            m = FloatingGeometry.metrics(width: settings.floatWidth, maxUnits: units, rows: rows.count)
+            totalHeight = m.height
+        } else {
+            m = KeyboardGeometry.metrics(visibleWidth: visible.width, visibleHeight: visible.height - bar,
+                                         maxUnits: units, rows: rows.count)
+            totalHeight = m.height + bar
+        }
+        let root = NSVisualEffectView(frame: NSRect(x: 0, y: 0, width: m.width, height: totalHeight))
         root.material = .hudWindow
         root.state = .active
         root.wantsLayer = true
         root.layer?.cornerRadius = 14
 
+        // toolbar
+        let barY = totalHeight - bar
+        let drag = DragBar(frame: NSRect(x: 0, y: barY, width: m.width, height: bar))
+        drag.controller = self
+        drag.setAccessibilityLabel("Move keyboard")
+        root.addSubview(drag)
+        let opacity = BarButton("◐ \(Int(settings.opacity * 100))%", label: "Keyboard transparency") { [weak self] in self?.cycleOpacity() }
+        opacity.frame = NSRect(x: 8, y: barY, width: 86, height: bar)
+        root.addSubview(opacity)
+        opacityButton = opacity
+        let modeTitle = settings.mode == .floating ? "⤓ Dock" : "⧉ Float"
+        let mode = BarButton(modeTitle, label: settings.mode == .floating ? "Dock keyboard" : "Float keyboard") { [weak self] in self?.toggleMode() }
+        mode.frame = NSRect(x: 98, y: barY, width: 86, height: bar)
+        root.addSubview(mode)
+        if settings.mode == .floating {
+            let grip = ResizeGrip(frame: NSRect(x: m.width - bar - 4, y: barY, width: bar, height: bar))
+            grip.controller = self
+            grip.setAccessibilityLabel("Resize keyboard")
+            root.addSubview(grip)
+        }
+
+        // keys
         keyViews = []
-        let fontSize = CGFloat(min(max(m.keyHeight * 0.36, 17), 28))
+        let fontSize = CGFloat(min(max(m.keyHeight * 0.36, 12), 28))
         for (r, row) in rows.enumerated() {
             let rowUnits = row.reduce(0) { $0 + $1.width }
             var x = (m.width - rowUnits * m.unit) / 2
-            let y = m.height - m.padding - Double(r + 1) * m.keyHeight
+            let y = barY - m.padding - Double(r + 1) * m.keyHeight
             for key in row {
                 let kv = KeyView(key: key, title: state.displayLabel(for: key), fontSize: fontSize)
                 kv.controller = self
@@ -178,8 +297,75 @@ final class KeyboardController {
                 x += key.width * m.unit
             }
         }
+        // keep the top edge where it was when the size changes
+        let oldTop = panel.frame.maxY
+        let wasPlaced = panel.frame.width > 0
         panel.contentView = root
-        panel.setContentSize(NSSize(width: m.width, height: m.height))
+        panel.setContentSize(NSSize(width: m.width, height: totalHeight))
+        if wasPlaced && settings.mode == .floating {
+            panel.setFrameOrigin(NSPoint(x: panel.frame.minX, y: oldTop - CGFloat(totalHeight)))
+        }
+    }
+
+    // MARK: floating / transparency
+
+    func cycleOpacity() {
+        settings.cycleOpacity()
+        panel.alphaValue = CGFloat(settings.opacity)
+        opacityButton?.title = "◐ \(Int(settings.opacity * 100))%"
+        saveSettings()
+    }
+
+    func toggleMode() {
+        guard let screen = currentScreen ?? NSScreen.main else { return }
+        settings.mode = settings.mode == .floating ? .docked : .floating
+        rebuild(on: screen)
+        place(on: screen, field: lastField)
+        saveSettings()
+    }
+
+    func dragBegan() {
+        guard settings.mode == .docked, let screen = currentScreen ?? NSScreen.main else { return }
+        // dragging the docked keyboard undocks it, keeping the bar under the finger
+        let top = panel.frame.maxY, left = panel.frame.minX
+        settings.mode = .floating
+        settings.floatWidth = min(settings.floatWidth, Double(panel.frame.width))
+        rebuild(on: screen)
+        panel.setFrameOrigin(NSPoint(x: left, y: top - panel.frame.height))
+    }
+
+    func dragMoved(to origin: NSPoint) {
+        guard let screen = currentScreen ?? NSScreen.main else { return }
+        let (x, y) = FloatingGeometry.clampOrigin(x: Double(origin.x), y: Double(origin.y),
+                                                  size: (Double(panel.frame.width), Double(panel.frame.height)),
+                                                  visible: visibleRect(screen))
+        panel.setFrameOrigin(NSPoint(x: x, y: y))
+    }
+
+    func dragEnded() {
+        settings.floatX = Double(panel.frame.minX)
+        settings.floatY = Double(panel.frame.minY)
+        saveSettings()
+    }
+
+    func resizeBegan() {
+        resizeStart = (Double(panel.frame.width), Double(panel.frame.maxY), Double(panel.frame.minX))
+    }
+
+    func resizeMoved(dx: Double) {
+        guard let st = resizeStart, let screen = currentScreen ?? NSScreen.main else { return }
+        let r = FloatingGeometry.resize(startWidth: st.width, startTop: st.top, startX: st.x, dx: dx,
+                                        maxUnits: Layouts.maxUnits(for: state.layer),
+                                        rows: Layouts.rows(for: state.layer).count, visible: visibleRect(screen))
+        if abs(r.width - Double(panel.frame.width)) < 4 { return }   // avoid rebuilding for tiny moves
+        settings.floatWidth = r.width
+        rebuild(on: screen)
+        panel.setFrameOrigin(NSPoint(x: r.x, y: r.y))
+    }
+
+    func resizeEnded() {
+        resizeStart = nil
+        dragEnded()
     }
 
     private func refreshLabels() {
@@ -258,8 +444,16 @@ final class KeyboardController {
     // MARK: show / hide
 
     private func place(on screen: NSScreen, field: Rect?) {
-        let vf = screen.visibleFrame
-        let visible = Rect(x: Double(vf.minX), y: Double(vf.minY), width: Double(vf.width), height: Double(vf.height))
+        let visible = visibleRect(screen)
+        let size = (Double(panel.frame.width), Double(panel.frame.height))
+        if settings.mode == .floating {
+            // floating keyboards stay exactly where the user put them
+            let (dx, dy) = FloatingGeometry.defaultOrigin(size: size, visible: visible)
+            let (x, y) = FloatingGeometry.clampOrigin(x: settings.floatX ?? dx, y: settings.floatY ?? dy,
+                                                      size: size, visible: visible)
+            panel.setFrameOrigin(NSPoint(x: x, y: y))
+            return
+        }
         let (x, y) = KeyboardGeometry.placement(visible: visible,
                                                 size: (Double(panel.frame.width), Double(panel.frame.height)),
                                                 field: field)
@@ -278,7 +472,7 @@ final class KeyboardController {
         panel.orderFrontRegardless()
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.12
-            panel.animator().alphaValue = 1
+            panel.animator().alphaValue = CGFloat(settings.opacity)
         }
     }
 

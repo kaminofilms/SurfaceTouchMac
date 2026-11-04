@@ -73,3 +73,14 @@ echo "== package contents"
 pkgutil --payload-files "$OUT/component.pkg" | sed 's/^/  /' | awk 'NR<=80'
 pkgutil --check-signature "$OUT/SurfaceTouchMac-Setup.pkg" || echo "(unsigned: no Developer ID Installer certificate)"
 shasum -a 256 "$OUT/SurfaceTouchMac-Setup.pkg"
+
+echo "== keyboard-only update package"
+KU="$OUT/kbupdate"
+rm -rf "$KU" && mkdir -p "$KU/root/Applications" "$KU/scripts"
+cp -R "$ROOT/keyboard/dist/SurfaceTouchKeys.app" "$KU/root/Applications/"
+cp "$HERE/keyboard-update-scripts/postinstall" "$KU/scripts/"
+chmod 755 "$KU/scripts/postinstall"
+pkgbuild --root "$KU/root" --scripts "$KU/scripts" --identifier com.kaminofilms.surfacetouchkeys.update \
+  --version "$VERSION" --install-location / "$OUT/SurfaceTouchKeys-Update.pkg"
+pkgutil --payload-files "$OUT/SurfaceTouchKeys-Update.pkg" | awk 'NR<=5'
+shasum -a 256 "$OUT/SurfaceTouchKeys-Update.pkg"

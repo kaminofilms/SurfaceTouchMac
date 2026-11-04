@@ -1,0 +1,15 @@
+#!/bin/bash
+# SurfaceTouchKeys update: replaces only the keyboard app and restarts it.
+# Does not touch OpenCore, drivers, touch helpers or privacy settings.
+LOG=/Library/Logs/SurfaceTouchMac-setup.log
+exec >>"$LOG" 2>&1
+echo "=== $(date '+%Y-%m-%d %H:%M:%S') SurfaceTouchKeys update"
+user="$(stat -f%Su /dev/console)"
+if [ -n "$user" ] && [ "$user" != "root" ] && [ "$user" != "loginwindow" ]; then
+  uid="$(id -u "$user")"
+  if [ -f /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist ]; then
+    launchctl bootout "gui/$uid/com.kaminofilms.surfacetouchkeys" 2>/dev/null || true
+    launchctl bootstrap "gui/$uid" /Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist && echo "keyboard restarted for $user"
+  fi
+fi
+exit 0
