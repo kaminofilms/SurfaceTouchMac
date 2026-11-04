@@ -1,0 +1,17 @@
+File Doesn't Exist, Will Create: t/A.app/Contents/Info.plist
+t/A.app: replacing existing signature
+t/B.app: replacing existing signature
+== search list before
+    "/Users/runner/Library/Keychains/login.keychain-db"
+local signing: created a signing key for this Mac
+t/A.app: replacing existing signature
+local signing: signed t/A.app (EF941911B815BDFDFF92DACD9E0B093C91274814)
+t/B.app: replacing existing signature
+local signing: signed t/B.app (EF941911B815BDFDFF92DACD9E0B093C91274814)
+== search list after
+    "/Users/runner/Library/Keychains/login.keychain-db"
+A: designated => identifier "com.kaminofilms.surfacetouchkeys" and certificate leaf = H"ef941911b815bdfdff92dacd9e0b093c91274814"
+B: designated => identifier "com.kaminofilms.surfacetouchkeys" and certificate leaf = H"ef941911b815bdfdff92dacd9e0b093c91274814"
+CHECK same_identity PASS
+CHECK local_key PASS
+CHECK runs PASS
