@@ -78,6 +78,8 @@ echo "== keyboard-only update package"
 KU="$OUT/kbupdate"
 rm -rf "$KU" && mkdir -p "$KU/root/Applications" "$KU/scripts"
 cp -R "$ROOT/keyboard/dist/SurfaceTouchKeys.app" "$KU/root/Applications/"
+# also (re)installs the login item, in case it was removed
+mkdir -p "$KU/root/Library/LaunchAgents" && cp "$HERE/payload/Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist" "$KU/root/Library/LaunchAgents/"
 cp "$HERE/keyboard-update-scripts/postinstall" "$HERE/common/stm-local-sign" "$KU/scripts/"
 chmod 755 "$KU/scripts/"*
 pkgbuild --root "$KU/root" --scripts "$KU/scripts" --identifier com.kaminofilms.surfacetouchkeys.update \
@@ -89,6 +91,7 @@ echo "== touch + keyboard update package"
 UP="$OUT/update"
 rm -rf "$UP" && mkdir -p "$UP/root/Applications" "$UP/root/Library/SurfaceTouchMac/update" "$UP/root/Library/SurfaceTouchMac/bin" "$UP/scripts"
 cp -R "$ROOT/keyboard/dist/SurfaceTouchKeys.app" "$UP/root/Applications/"
+mkdir -p "$UP/root/Library/LaunchAgents" && cp "$HERE/payload/Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist" "$UP/root/Library/LaunchAgents/"
 cp -R "$ROOT/kext/build/BigSurface.kext" "$UP/root/Library/SurfaceTouchMac/update/"
 cp "$ROOT/keyboard/dist/stm-setup" "$UP/root/Library/SurfaceTouchMac/bin/"
 cp "$HERE/update-scripts/postinstall" "$HERE/common/stm-local-sign" "$UP/scripts/"
