@@ -83,7 +83,7 @@ mkdir -p "$KU/root/Library/LaunchAgents" && cp "$HERE/payload/Library/LaunchAgen
 cp "$HERE/keyboard-update-scripts/postinstall" "$HERE/common/stm-local-sign" "$KU/scripts/"
 chmod 755 "$KU/scripts/"*
 pkgbuild --root "$KU/root" --scripts "$KU/scripts" --identifier com.kaminofilms.surfacetouchkeys.update \
-  --version "$VERSION" --install-location / "$OUT/SurfaceTouchKeys-Update.pkg"
+  --version "$VERSION" --install-location / --ownership recommended "$OUT/SurfaceTouchKeys-Update.pkg"
 pkgutil --payload-files "$OUT/SurfaceTouchKeys-Update.pkg" | awk 'NR<=5'
 shasum -a 256 "$OUT/SurfaceTouchKeys-Update.pkg"
 
@@ -97,6 +97,6 @@ cp "$ROOT/keyboard/dist/stm-setup" "$UP/root/Library/SurfaceTouchMac/bin/"
 cp "$HERE/update-scripts/postinstall" "$HERE/common/stm-local-sign" "$UP/scripts/"
 chmod 755 "$UP/scripts/"*
 pkgbuild --root "$UP/root" --scripts "$UP/scripts" --identifier com.kaminofilms.surfacetouchmac.update \
-  --version "$VERSION" --install-location / "$OUT/SurfaceTouchMac-Update.pkg"
+  --version "$VERSION" --install-location / --ownership recommended "$OUT/SurfaceTouchMac-Update.pkg"
 pkgutil --payload-files "$OUT/SurfaceTouchMac-Update.pkg" | grep -E "SurfaceTouchKeys.app$|BigSurface.kext$|stm-setup$"
 shasum -a 256 "$OUT/SurfaceTouchMac-Update.pkg"
