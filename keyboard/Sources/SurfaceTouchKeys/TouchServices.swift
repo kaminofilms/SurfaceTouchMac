@@ -13,7 +13,13 @@
 
 import AppKit
 import ApplicationServices
+import os
 import TouchKeyboardCore
+
+/// Diagnostics only: which input was detected and what the pointer did.
+/// Never logs typed text, keys or what is on screen.
+/// Read with: log show --last 5m --predicate 'subsystem == "com.kaminofilms.surfacetouchkeys"'
+let touchLog = Logger(subsystem: "com.kaminofilms.surfacetouchkeys", category: "touch")
 
 // MARK: - Settings (menu-bar toggles)
 
@@ -30,8 +36,9 @@ enum TouchPrefs {
 enum PointerVisibility {
     private typealias DefaultConn = @convention(c) () -> Int32
     private typealias SetProp = @convention(c) (Int32, Int32, CFString, CFTypeRef) -> Int32
-    private static var hidden = false
+    private static var hideCount = 0
     private static var prepared = false
+    private(set) static var wantHidden = false
 
     /// Lets a background app hide the cursor (private CoreGraphics property,
     /// looked up at run time; if unavailable, hiding is simply skipped).
@@ -39,22 +46,35 @@ enum PointerVisibility {
         if prepared { return true }
         guard let h = dlopen(nil, RTLD_NOW),
               let c = dlsym(h, "_CGSDefaultConnection"),
-              let s = dlsym(h, "CGSSetConnectionProperty") else { return false }
+              let s = dlsym(h, "CGSSetConnectionProperty") else {
+            touchLog.notice("pointer: hiding not available (CoreGraphics symbols missing)")
+            return false
+        }
         let conn = unsafeBitCast(c, to: DefaultConn.self)()
-        _ = unsafeBitCast(s, to: SetProp.self)(conn, conn, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
+        let rc = unsafeBitCast(s, to: SetProp.self)(conn, conn, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
+        touchLog.notice("pointer: background hiding enabled (rc=\(rc, privacy: .public))")
         prepared = true
         return true
     }
 
     static func set(hidden h: Bool) {
-        guard h != hidden else { return }
+        if h == wantHidden { if h { reassert() }; return }
+        wantHidden = h
+        touchLog.notice("pointer: \(h ? "hide" : "show", privacy: .public)")
         if h {
-            guard prepare() else { return }
-            CGDisplayHideCursor(CGMainDisplayID())
+            reassert()
         } else {
-            CGDisplayShowCursor(CGMainDisplayID())
+            while hideCount > 0 { CGDisplayShowCursor(CGMainDisplayID()); hideCount -= 1 }
         }
-        hidden = h
+    }
+
+    /// macOS shows the pointer again when it moves, and every finger tap
+    /// moves it: hide it again (net hide count stays at 1).
+    static func reassert() {
+        guard wantHidden, prepare() else { return }
+        if hideCount > 0 { CGDisplayShowCursor(CGMainDisplayID()); hideCount -= 1 }
+        CGDisplayHideCursor(CGMainDisplayID())
+        hideCount += 1
     }
 }
 
@@ -297,7 +317,7 @@ final class TouchServices {
     var isTouchActive: Bool { tracker.source == .touch }
 
     func start() {
-        var mask: CGEventMask = [CGEventType.mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown, .scrollWheel]
+        var mask: CGEventMask = [CGEventType.mouseMoved, .leftMouseDown, .leftMouseUp, .leftMouseDragged, .rightMouseDown, .scrollWheel]
             .reduce(0) { $0 | (1 << CGEventMask($1.rawValue)) }
         mask |= 1 << 29          // NSEventTypeGesture: fingers on the trackpad (not the touchscreen)
         let callback: CGEventTapCallBack = { _, type, event, refcon in
@@ -308,6 +328,7 @@ final class TouchServices {
         tap = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEventTap, options: .defaultTap,
                                 eventsOfInterest: mask, callback: callback,
                                 userInfo: Unmanaged.passUnretained(self).toOpaque())
+        touchLog.notice("touch services: event tap \(self.tap != nil ? "running" : "NOT created (no Accessibility permission?)", privacy: .public)")
         if let tap {
             let src = CFMachPortCreateRunLoopSource(nil, tap, 0)
             CFRunLoopAddSource(CFRunLoopGetMain(), src, .commonModes)
@@ -318,6 +339,17 @@ final class TouchServices {
         observeMenus()
     }
 
+    private var reassertPending = false
+    /// Hide the pointer again just after this event has moved it.
+    private func scheduleReassert() {
+        guard TouchPrefs.hidePointer, !reassertPending else { return }
+        reassertPending = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) { [weak self] in
+            self?.reassertPending = false
+            PointerVisibility.reassert()
+        }
+    }
+
     private func primaryHeight() -> CGFloat { NSScreen.screens.first?.frame.height ?? 0 }
 
     private func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
@@ -326,8 +358,9 @@ final class TouchServices {
             return Unmanaged.passUnretained(event)
         }
         if type.rawValue == 29 {          // trackpad gesture: show the pointer
-            if let s = tracker.trackpadActivity(now: ProcessInfo.processInfo.systemUptime), TouchPrefs.hidePointer {
-                PointerVisibility.set(hidden: s == .touch)
+            if let s = tracker.trackpadActivity(now: ProcessInfo.processInfo.systemUptime) {
+                touchLog.notice("input: trackpad")
+                if TouchPrefs.hidePointer { PointerVisibility.set(hidden: s == .touch) }
             }
             return Unmanaged.passUnretained(event)
         }
@@ -341,9 +374,13 @@ final class TouchServices {
             let dockBand = Double(primaryHeight() - loc.y) <= Double(primaryHeight()) * 0.07
             if let s = tracker.moved(dx: Double(loc.x - prev.x), dy: Double(loc.y - prev.y), buttonDown: button, tablet: tablet,
                                      now: ProcessInfo.processInfo.systemUptime, inDockBand: dockBand) {
+                touchLog.notice("input: \(s == .touch ? "touchscreen" : "mouse/trackpad", privacy: .public) (subtype tablet=\(tablet, privacy: .public))")
                 if TouchPrefs.hidePointer { PointerVisibility.set(hidden: s == .touch) }
             }
-            if tracker.source == .touch { lastTouchAt = ProcessInfo.processInfo.systemUptime }
+            if tracker.source == .touch {
+                lastTouchAt = ProcessInfo.processInfo.systemUptime
+                scheduleReassert()
+            }
             if type == .leftMouseDown || type == .rightMouseDown {
                 let p = NSPoint(x: loc.x, y: primaryHeight() - loc.y)
                 if menus.isVisible && !menus.contains(screenPoint: p) {
@@ -353,6 +390,8 @@ final class TouchServices {
                     DispatchQueue.main.async { self.onOutsideClick?() }
                 }
             }
+        case .leftMouseUp:
+            if tracker.source == .touch { scheduleReassert() }
         case .scrollWheel:
             return handleScroll(event)
         default:
