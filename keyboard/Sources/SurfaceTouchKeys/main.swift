@@ -42,6 +42,20 @@ enum EventPoster {
         }
     }
 
+    static func shortcut(_ sc: Shortcut) {
+        var flags: CGEventFlags = []
+        if sc.modifiers.contains(.command) { flags.insert(.maskCommand) }
+        if sc.modifiers.contains(.option) { flags.insert(.maskAlternate) }
+        if sc.modifiers.contains(.control) { flags.insert(.maskControl) }
+        if sc.shift { flags.insert(.maskShift) }
+        if (123...126).contains(sc.keyCode) { flags.insert(.maskSecondaryFn); flags.insert(.maskNumericPad) }
+        for down in [true, false] {
+            guard let e = CGEvent(keyboardEventSource: source, virtualKey: sc.keyCode, keyDown: down) else { continue }
+            e.flags = flags
+            e.post(tap: .cgSessionEventTap)
+        }
+    }
+
     /// Number of outputs emitted (used only by the CI self-test; no content is kept).
     static var emitted = 0
 
@@ -50,6 +64,7 @@ enum EventPoster {
         switch output {
         case .text(let s): type(s)
         case .special(let k): special(k)
+        case .shortcut(let sc): shortcut(sc)
         case .none: break
         }
     }
@@ -279,9 +294,21 @@ final class KeyboardController {
         let mode = BarButton(modeTitle, label: settings.mode == .floating ? "Dock keyboard" : "Float keyboard") { [weak self] in self?.toggleMode() }
         mode.frame = NSRect(x: 98, y: barY, width: 86, height: bar)
         root.addSubview(mode)
+        // Undo / Cut / Copy / Paste (iPad-style shortcuts), when there is room
+        var sugStart: CGFloat = 196
+        if m.width >= 560 {
+            for (title, label, sc, w) in [("↶", "Undo", Shortcut.undo, 44.0), ("Cut", "Cut", Shortcut.cut, 52.0),
+                                          ("Copy", "Copy", Shortcut.copy, 62.0), ("Paste", "Paste", Shortcut.paste, 68.0)] {
+                let b = BarButton(title, label: label) { [weak self] in self?.sendShortcut(sc) }
+                b.frame = NSRect(x: sugStart, y: barY, width: CGFloat(w), height: bar)
+                b.font = .systemFont(ofSize: 15, weight: .semibold)
+                root.addSubview(b)
+                sugStart += CGFloat(w) + 4
+            }
+            sugStart += 8
+        }
         // suggestions (between the buttons and the resize grip)
         suggestionButtons = []
-        let sugStart: CGFloat = 196
         let sugEnd: CGFloat = CGFloat(m.width) - bar - 12
         let slots = max(0, min(3, Int((sugEnd - sugStart) / 120)))
         if slots > 0 {
@@ -313,8 +340,7 @@ final class KeyboardController {
                 let kv = KeyView(key: key, title: state.displayLabel(for: key), fontSize: fontSize)
                 kv.controller = self
                 kv.frame = NSRect(x: x, y: y, width: key.width * m.unit, height: m.keyHeight)
-                if key.action == .shift { kv.latched = state.shift }
-                if key.action == .capsLock { kv.latched = state.capsLock }
+                kv.latched = state.isLatched(key)
                 root.addSubview(kv)
                 keyViews.append(kv)
                 x += key.width * m.unit
@@ -394,8 +420,7 @@ final class KeyboardController {
     private func refreshLabels() {
         for kv in keyViews {
             kv.title = state.displayLabel(for: kv.key)
-            if kv.key.action == .shift { kv.latched = state.shift }
-            if kv.key.action == .capsLock { kv.latched = state.capsLock }
+            kv.latched = state.isLatched(kv.key)
         }
     }
 
@@ -469,6 +494,12 @@ final class KeyboardController {
 
     // MARK: typing assist, suggestions, accents
 
+    func sendShortcut(_ sc: Shortcut) {
+        lastKeyPress = now()
+        send(.shortcut(sc))
+        updateSuggestions()
+    }
+
     private func send(_ output: Output) {
         let assistOn = TouchPrefs.typingAssist
         switch output {
@@ -478,6 +509,9 @@ final class KeyboardController {
             for o in assist.type(" ", now: now()) { EventPoster.emit(o) }
         case .special(let k):
             assist.special(k)
+            EventPoster.emit(output)
+        case .shortcut:
+            assist.reset()                  // copy/paste/undo may change the text: forget context
             EventPoster.emit(output)
         case .none:
             break
@@ -854,8 +888,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(item)
         }
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit SurfaceTouchKeys", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        let quit = NSMenuItem(title: "Quit SurfaceTouchKeys", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(quit)
         menu.items.forEach { $0.target = self }
+        quit.target = NSApp          // terminate(_:) lives on the application, not on this delegate
         statusItem.menu = menu
 
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
@@ -935,6 +971,16 @@ if let i = args.firstIndex(of: "--ci-selftest") {
     // Non-interactive checks used by CI (see keyboard/ci/keyboard-ci.sh).
     _ = i
     exit(CISelfTest.run(arguments: args) ? 0 : 1)
+}
+
+// Only one copy: a second launch (e.g. opened from Applications while the
+// login item is already running) quits at once. Exit 0 = launchd won't restart it.
+if let id = Bundle.main.bundleIdentifier {
+    let me = ProcessInfo.processInfo.processIdentifier
+    if NSRunningApplication.runningApplications(withBundleIdentifier: id).contains(where: { $0.processIdentifier != me && !$0.isTerminated }) {
+        print("SurfaceTouchKeys is already running; this copy quits")
+        exit(0)
+    }
 }
 
 let app = NSApplication.shared

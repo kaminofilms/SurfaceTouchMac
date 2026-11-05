@@ -177,33 +177,73 @@ public struct EdgeSwipeDetector: Sendable {
 }
 
 /// Decides whether pointer events come from the touchscreen (hide the pointer)
-/// or from a trackpad/mouse (show it).
+/// or from the Type Cover trackpad / a mouse (show it).
+///
+///  * trackpad contact (gesture events) -> pointer, for a moment afterwards
+///  * a click or drag that is not the end of a stream of small moves -> touch
+///    (a finger tap: the touch driver moves the pointer once, then clicks)
+///  * a jump of the pointer, or tablet data -> touch
+///  * a stream of small moves in quick succession -> mouse/trackpad
+///  * moves in the Dock band (finger sliding along the Dock) change nothing
 public struct PointerSourceTracker: Sendable {
     public enum Source: Equatable, Sendable { case touch, pointer }
     public private(set) var source: Source = .pointer
-    public var jumpThreshold = 40.0   // a move this large in one event = finger landed
-    public var showAfter = 3          // consecutive small moves (no button) = trackpad/mouse
+    public var jumpThreshold = 40.0   // points moved in one event = finger landed elsewhere
+    public var streamCount = 4        // this many small moves...
+    public var streamGap = 0.12       // ...each within this many seconds = mouse/trackpad
+    public var trackpadHold = 0.8     // seconds the pointer stays after trackpad contact
 
     private var smallMoves = 0
+    private var lastSmallAt = -100.0
+    private var lastTrackpadAt = -100.0
     public init() {}
 
-    /// `tablet` = the event carries tablet/digitizer data (subtype).
-    /// Returns the new source if it changed.
-    public mutating func moved(dx: Double, dy: Double, buttonDown: Bool, tablet: Bool) -> Source? {
-        let jump = (dx * dx + dy * dy).squareRoot() >= jumpThreshold
-        if tablet || jump {
+    /// A trackpad gesture event (fingers on the Type Cover trackpad).
+    public mutating func trackpadActivity(now: Double) -> Source? {
+        lastTrackpadAt = now
+        smallMoves = 0
+        return set(.pointer)
+    }
+
+    /// A pointer event. `buttonDown` = click or drag. `tablet` = the event
+    /// carries tablet/digitizer data. Returns the new source if it changed.
+    public mutating func moved(dx: Double, dy: Double, buttonDown: Bool, tablet: Bool,
+                               now: Double, inDockBand: Bool = false) -> Source? {
+        if now - lastTrackpadAt < trackpadHold { return set(.pointer) }
+        if tablet { smallMoves = 0; return set(.touch) }
+        if buttonDown {
+            let streaming = smallMoves >= streamCount && now - lastSmallAt <= streamGap * 2
+            if streaming { lastSmallAt = now; return nil }      // mouse click/drag
             smallMoves = 0
-            return set(.touch)
+            return set(.touch)                                   // finger tap/drag
         }
-        if buttonDown { return nil }        // drags/scrolls keep the current state
+        if (dx * dx + dy * dy).squareRoot() >= jumpThreshold { smallMoves = 0; return set(.touch) }
+        if inDockBand { return nil }
+        if now - lastSmallAt > streamGap { smallMoves = 0 }
         smallMoves += 1
-        if smallMoves >= showAfter { return set(.pointer) }
-        return nil
+        lastSmallAt = now
+        return smallMoves >= streamCount ? set(.pointer) : nil
     }
 
     private mutating func set(_ s: Source) -> Source? {
         if s == source { return nil }
         source = s
         return s
+    }
+}
+
+/// Hidden "alternate" menu items (shown by macOS only while Option/Shift is
+/// held, e.g. "Restart" next to "Restart…") must not get their own row.
+public enum MenuAlternates {
+    public static func baseTitle(_ t: String) -> String {
+        var s = t.trimmingCharacters(in: .whitespaces)
+        for suffix in ["…", "..."] where s.hasSuffix(suffix) { s = String(s.dropLast(suffix.count)) }
+        return s.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// True if `title` repeats the previous visible item apart from "…".
+    public static func repeatsPrevious(_ title: String, previous: String?) -> Bool {
+        guard let p = previous, !title.isEmpty, !p.isEmpty else { return false }
+        return baseTitle(title) == baseTitle(p)
     }
 }

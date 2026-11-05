@@ -15,6 +15,12 @@ import TouchKeyboardCore
 enum CISelfTest {
     static var failures = 0
 
+    /// A check that is reported but does not fail the run (read from the log).
+    static func info(_ name: String, _ ok: Bool, _ detail: String = "") {
+        print("CHECK \(name) \(ok ? "PASS" : "WARN") \(detail)")
+        fflush(stdout)
+    }
+
     static func report(_ name: String, _ ok: Bool?, _ detail: String = "") {
         let s = ok == nil ? "SKIP" : (ok! ? "PASS" : "FAIL")
         if ok == false { failures += 1 }
@@ -166,6 +172,37 @@ enum CISelfTest {
         }
         report("auto_capital_start", docText.hasPrefix("H"), "document starts with '\(docText.prefix(3))'")
 
+        // ⌘ key on the keyboard (⌘ then A = select all) + the Copy button
+        func barButtons(_ v: NSView) -> [BarButton] { (v as? BarButton).map { [$0] } ?? v.subviews.flatMap(barButtons) }
+        let edits = kb.panel.contentView.map(barButtons)?.compactMap { $0.accessibilityLabel() } ?? []
+        info("edit_buttons_present", ["Undo", "Cut", "Copy", "Paste"].allSatisfy(edits.contains), "buttons=\(edits)")
+        NSPasteboard.general.clearContents()
+        if let cmd = allKeyViews(kb).first(where: { $0.key.action == .modifier(.command) }) {
+            click(at: screenCenter(of: cmd)); pump(0.4)
+            let latched = cmd.latched
+            if let a = allKeyViews(kb).first(where: { $0.key.label == "a" }) { click(at: screenCenter(of: a)) }
+            pump(0.6)
+            kb.sendShortcut(.copy)                         // what the Copy button does
+            pump(0.8)
+            let copied = NSPasteboard.general.string(forType: .string) ?? ""
+            info("command_key_select_all_and_copy", latched && !copied.isEmpty && copied == docText,
+                 "⌘ latched=\(latched), copied \(copied.count) chars, document \(docText.count) chars")
+        } else {
+            info("command_key_select_all_and_copy", false, "no ⌘ key")
+        }
+
+        // pointer hiding from a background app (the mechanism the touch services use)
+        typealias Vis = @convention(c) () -> Int32
+        if let h = dlopen(nil, RTLD_NOW), let f = dlsym(h, "CGCursorIsVisible") {
+            let visible = unsafeBitCast(f, to: Vis.self)
+            let before = visible()
+            PointerVisibility.set(hidden: true); pump(0.3)
+            let during = visible()
+            PointerVisibility.set(hidden: false); pump(0.3)
+            info("pointer_hides_from_background", before != 0 && during == 0 && visible() != 0,
+                 "visible before=\(before) hidden=\(during) after=\(visible())")
+        }
+
         // big touch menu built from TextEdit's real Edit menu
         let teApp = AXUIElementCreateApplication(te.processIdentifier)
         var menuRows: [MenuRow] = []
@@ -176,6 +213,17 @@ enum CISelfTest {
             menuRows = MenuReader.rows(of: menu)
         }
         report("touch_menu_reads_items", menuRows.filter { !$0.isSeparator }.count >= 5, "rows=\(menuRows.count)")
+        // TextEdit's File menu has hidden Option alternates (e.g. "Close All")
+        if let bar = MenuReader.attr(teApp, kAXMenuBarAttribute), CFGetTypeID(bar) == AXUIElementGetTypeID(),
+           let items = MenuReader.attr(bar as! AXUIElement, kAXChildrenAttribute) as? [AXUIElement],
+           let file = items.first(where: { (MenuReader.attr($0, kAXTitleAttribute) as? String) == "File" }),
+           let menu = (MenuReader.attr(file, kAXChildrenAttribute) as? [AXUIElement])?.first {
+            let raw = (MenuReader.attr(menu, kAXChildrenAttribute) as? [AXUIElement])?.count ?? 0
+            let titles = MenuReader.rows(of: menu).filter { !$0.isSeparator }.map(\.title)
+            let dup = zip(titles, titles.dropFirst()).contains { MenuAlternates.baseTitle($0) == MenuAlternates.baseTitle($1) }
+            info("touch_menu_no_alternates", !titles.isEmpty && !dup && !titles.contains("Close All"),
+                 "raw=\(raw) shown=\(titles.count): \(titles.joined(separator: " | "))")
+        }
         let tm = TouchMenuController()
         if tm.present(rows: menuRows, title: "Edit", at: NSPoint(x: 200, y: screen.visibleFrame.maxY)) {
             let rowViews = tm.panel.contentView.map { v -> [RowView] in

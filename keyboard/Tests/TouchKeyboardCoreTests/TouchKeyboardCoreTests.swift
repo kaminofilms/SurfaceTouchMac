@@ -23,6 +23,58 @@ final class KeyboardStateTests: XCTestCase {
         }
     }
 
+    func testModifierKeysPresentAndRowsAligned() {
+        for layer in [Layer.letters, .symbols] {
+            let actions = Layouts.rows(for: layer).flatMap { $0 }.map(\.action)
+            for m in Modifier.allCases { XCTAssertTrue(actions.contains(.modifier(m)), "missing \(m)") }
+            for row in Layouts.rows(for: layer) where row.count > 1 {
+                XCTAssertLessThanOrEqual(row.reduce(0) { $0 + $1.width }, 12.5 + 1e-9)
+            }
+        }
+        XCTAssertEqual(Layouts.maxUnits(for: .letters), 12.5, accuracy: 1e-9)
+    }
+
+    func testCommandCIsCopy() {
+        var s = KeyboardState()
+        _ = s.press(key("⌘"))
+        XCTAssertTrue(s.isLatched(key("⌘")))
+        XCTAssertEqual(s.press(key("c")).output, .shortcut(.copy))
+        XCTAssertFalse(s.isLatched(key("⌘")))                  // one-shot
+        XCTAssertEqual(s.press(key("c")).output, .text("c"))
+        _ = s.press(key("⌘"))
+        XCTAssertEqual(s.press(key("v")).output, .shortcut(.paste))
+    }
+
+    func testShortcutIgnoresAutoCapitalAndCapsLock() {
+        var s = KeyboardState()
+        s.setAutoShift(true)
+        _ = s.press(key("⌘"))
+        XCTAssertEqual(s.press(key("a")).output, .shortcut(Shortcut(keyCode: 0, modifiers: [.command])))
+        _ = s.press(key("caps"))
+        _ = s.press(key("⌘"))
+        XCTAssertEqual(s.press(key("z")).output, .shortcut(.undo))
+    }
+
+    func testUserShiftAndMultipleModifiers() {
+        var s = KeyboardState()
+        _ = s.press(key("⌘")); _ = s.press(key("⇧"))
+        XCTAssertEqual(s.press(key("z")).output, .shortcut(Shortcut(keyCode: 6, modifiers: [.command], shift: true)))
+        _ = s.press(key("⌃")); _ = s.press(key("⌥"))
+        XCTAssertEqual(s.press(key("d")).output, .shortcut(Shortcut(keyCode: 2, modifiers: [.control, .option])))
+        _ = s.press(key("⌥"))
+        XCTAssertEqual(s.press(key("⌫")).output, .shortcut(Shortcut(keyCode: 51, modifiers: [.option])))
+        _ = s.press(key("⌘")); _ = s.press(key("⌘"))         // tapped twice = off
+        XCTAssertEqual(s.press(key("q")).output, .text("q"))
+    }
+
+    func testKeyCodes() {
+        XCTAssertEqual(KeyCodes.lookup("c")?.code, 8)
+        XCTAssertEqual(KeyCodes.lookup("?")?.code, 44)
+        XCTAssertEqual(KeyCodes.lookup("?")?.shift, true)
+        XCTAssertEqual(KeyCodes.lookup("A")?.shift, true)
+        XCTAssertNil(KeyCodes.lookup("€"))
+    }
+
     func testLowercaseByDefault() {
         var s = KeyboardState()
         XCTAssertEqual(s.press(key("a")).output, .text("a"))

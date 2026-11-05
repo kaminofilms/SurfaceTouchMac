@@ -122,6 +122,9 @@ enum MenuReader {
         for item in kids {
             guard (attr(item, kAXRoleAttribute) as? String) == "AXMenuItem" else { continue }
             let title = attr(item, kAXTitleAttribute) as? String ?? ""
+            // hidden Option/Shift alternates ("Restart" next to "Restart…")
+            if attr(item, "AXMenuItemPrimaryUIElement") != nil { continue }
+            if MenuAlternates.repeatsPrevious(title, previous: out.last?.title) { continue }
             let enabled = attr(item, kAXEnabledAttribute) as? Bool ?? true
             let mark = attr(item, "AXMenuItemMarkChar") as? String ?? ""
             let sub = (attr(item, kAXChildrenAttribute) as? [AXUIElement])?.first {
@@ -291,8 +294,9 @@ final class TouchServices {
     var isTouchActive: Bool { tracker.source == .touch }
 
     func start() {
-        let mask: CGEventMask = [CGEventType.mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown, .scrollWheel]
+        var mask: CGEventMask = [CGEventType.mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown, .scrollWheel]
             .reduce(0) { $0 | (1 << CGEventMask($1.rawValue)) }
+        mask |= 1 << 29          // NSEventTypeGesture: fingers on the trackpad (not the touchscreen)
         let callback: CGEventTapCallBack = { _, type, event, refcon in
             guard let refcon else { return Unmanaged.passUnretained(event) }
             let me = Unmanaged<TouchServices>.fromOpaque(refcon).takeUnretainedValue()
@@ -318,6 +322,12 @@ final class TouchServices {
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             return Unmanaged.passUnretained(event)
         }
+        if type.rawValue == 29 {          // trackpad gesture: show the pointer
+            if let s = tracker.trackpadActivity(now: ProcessInfo.processInfo.systemUptime), TouchPrefs.hidePointer {
+                PointerVisibility.set(hidden: s == .touch)
+            }
+            return Unmanaged.passUnretained(event)
+        }
         let loc = event.location
         switch type {
         case .mouseMoved, .leftMouseDown, .leftMouseDragged, .rightMouseDown:
@@ -325,7 +335,9 @@ final class TouchServices {
             lastLocation = loc
             let tablet = event.getIntegerValueField(.mouseEventSubtype) == Int64(CGEventMouseSubtype.tabletPoint.rawValue)
             let button = type != .mouseMoved
-            if let s = tracker.moved(dx: Double(loc.x - prev.x), dy: Double(loc.y - prev.y), buttonDown: button, tablet: tablet) {
+            let dockBand = Double(primaryHeight() - loc.y) <= Double(primaryHeight()) * 0.07
+            if let s = tracker.moved(dx: Double(loc.x - prev.x), dy: Double(loc.y - prev.y), buttonDown: button, tablet: tablet,
+                                     now: ProcessInfo.processInfo.systemUptime, inDockBand: dockBand) {
                 if TouchPrefs.hidePointer { PointerVisibility.set(hidden: s == .touch) }
             }
             if tracker.source == .touch { lastTouchAt = ProcessInfo.processInfo.systemUptime }
