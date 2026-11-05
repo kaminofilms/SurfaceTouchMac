@@ -1,0 +1,49 @@
+## structural self-test
+CHECK panel_nonactivating PASS 
+CHECK panel_never_key PASS 
+CHECK fits_screen PASS panel=(352.0, 93.0, 1216.0, 406.0) visible=(0.0, 85.0, 1920.0, 970.0)
+CHECK touch_sized_keys PASS min=96x72pt keys=55
+CHECK surface_pro7_metrics PASS unit=96 keyH=72 size=1216x376
+CHECK floating_mode PASS frame=(580.0, 145.0, 760.0, 297.0) width=760
+CHECK floating_keys_usable PASS keys=55
+CHECK drag_clamped_on_screen PASS frame=(0.0, 758.0, 760.0, 297.0)
+CHECK resize_min_width PASS width=420
+CHECK opacity_applies PASS alpha=0.85
+CHECK docked_restored PASS 
+CHECK accent_popup PASS long press on e
+CHECK no_accents_for_k PASS 
+## interactive test (TextEdit)
+CHECK panel_nonactivating PASS 
+CHECK panel_never_key PASS 
+CHECK fits_screen PASS panel=(352.0, 93.0, 1216.0, 406.0) visible=(0.0, 85.0, 1920.0, 970.0)
+CHECK touch_sized_keys PASS min=96x72pt keys=55
+CHECK surface_pro7_metrics PASS unit=96 keyH=72 size=1216x376
+CHECK floating_mode PASS frame=(0.0, 874.0, 420.0, 181.0) width=420
+CHECK floating_keys_usable PASS keys=55
+CHECK drag_clamped_on_screen PASS frame=(0.0, 874.0, 420.0, 181.0)
+CHECK resize_min_width PASS width=420
+CHECK opacity_applies PASS alpha=0.85
+CHECK docked_restored PASS 
+CHECK accent_popup PASS long press on e
+CHECK no_accents_for_k PASS 
+CHECK accessibility_trusted PASS 
+CHECK textedit_frontmost PASS 
+CHECK auto_show_on_text_focus PASS 
+CHECK taps_reached_keys PASS key outputs emitted by taps: 2
+CHECK post_event_access PASS CGPreflightPostEventAccess
+CHECK focused_text_length PASS characters in TextEdit document: 3 (expected 3)
+CHECK auto_capital_start PASS document starts with 'Hi!'
+CHECK edit_buttons_present PASS buttons=["Keyboard transparency", "Float keyboard", "Undo", "Cut", "Copy", "Paste", "Suggestion", "Suggestion", "Suggestion"]
+CHECK command_key_select_all_and_copy PASS ⌘ latched=true, copied 3 chars, document 3 chars
+CHECK pointer_hides_from_background WARN visible before=0 hidden=0 after=0
+CHECK touch_menu_reads_items PASS rows=24
+CHECK touch_menu_no_alternates WARN raw=21 shown=17: New | Open… | Open Recent | Close | Close All | Save… | Save As… | Duplicate | Rename… | Move To… | Revert To | <<Import From Device - unlocalized>> | Export as PDF… | Share | Show Properties | Page Setup… | Print…
+CHECK touch_menu_rows_finger_sized PASS rows=24 minHeight=46
+CHECK target_app_keeps_focus PASS frontmost=com.apple.TextEdit
+TYPED_EXPECTED hi!
+osascript read-back stderr: 35:39: execution error: TextEdit got an error: AppleEvent timed out. (-1712)
+CHECK typed_text PASS TextEdit contains hi! (2 taps + 1 direct post)
+## summary
+passed: 39
+skipped: 0
+failed: 0

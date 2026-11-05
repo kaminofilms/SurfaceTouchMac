@@ -1,0 +1,229 @@
+Building for debugging...
+[0/20] /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/keyboard/.build/x86_64-apple-macosx/debug/SurfaceTouchMacPackageTests.derived/runner.swift
+[0/20] Write sources
+[4/20] Write stm-setup-entitlement.plist
+[4/20] Write SurfaceTouchKeys-entitlement.plist
+[7/20] Write sources
+[9/20] Copying Fixtures
+[9/20] Write sources
+[11/20] Write swift-version--79AA4F9932D1E87A.txt
+[13/30] Compiling TouchKeyboardCore Layout.swift
+[14/30] Compiling TouchKeyboardCore TouchSequencer.swift
+[15/30] Emitting module TouchKeyboardCore
+[16/30] Compiling TouchKeyboardCore Geometry.swift
+[17/30] Compiling TouchKeyboardCore KeyboardState.swift
+[18/30] Compiling TouchKeyboardCore FloatingLayout.swift
+[19/30] Compiling TouchKeyboardCore FocusClassifier.swift
+[20/31] Compiling TouchKeyboardCore TypingAssist.swift
+[21/31] Compiling SurfaceSetupCore HardwareCheck.swift
+[22/31] Emitting module SurfaceSetupCore
+[23/31] Compiling SurfaceSetupCore DiskPlanner.swift
+[24/44] Emitting module stm_setup
+[25/44] Compiling stm_setup main.swift
+[25/44] Write Objects.LinkFileList
+[26/44] Linking stm-setup
+[27/44] Applying stm-setup
+[29/44] Compiling SurfaceTouchKeys TouchServices.swift
+[30/44] Compiling SurfaceTouchKeys CISelfTest.swift
+[31/44] Emitting module SurfaceTouchKeys
+[32/44] Compiling SurfaceTouchKeys main.swift
+[32/44] Write Objects.LinkFileList
+[33/44] Linking SurfaceTouchKeys
+[34/44] Applying SurfaceTouchKeys
+[36/44] Compiling SurfaceSetupCoreTests resource_bundle_accessor.swift
+[37/44] Compiling TouchKeyboardCoreTests TypingAssistTests.swift
+[38/44] Emitting module SurfaceSetupCoreTests
+[39/44] Compiling SurfaceSetupCoreTests SurfaceSetupCoreTests.swift
+[40/44] Compiling TouchKeyboardCoreTests FloatingLayoutTests.swift
+[41/44] Emitting module TouchKeyboardCoreTests
+[42/44] Compiling TouchKeyboardCoreTests TouchKeyboardCoreTests.swift
+[43/46] Compiling SurfaceTouchMacPackageTests runner.swift
+[44/46] Emitting module SurfaceTouchMacPackageTests
+[44/46] Write Objects.LinkFileList
+[45/46] Linking SurfaceTouchMacPackageTests
+Build complete! (54.24s)
+Test Suite 'All tests' started at 2026-11-05 01:11:09.420.
+Test Suite 'SurfaceTouchMacPackageTests.xctest' started at 2026-11-05 01:11:09.423.
+Test Suite 'DiskPlannerTests' started at 2026-11-05 01:11:09.423.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testDualBootKeepsSharedEFI]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testDualBootKeepsSharedEFI]' passed (0.006 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testNormalInternalSSDWithUSBAndSDAttached]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testNormalInternalSSDWithUSBAndSDAttached]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesEFINotFirst]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesEFINotFirst]' passed (0.005 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMissingEFI]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMissingEFI]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMultipleStores]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMultipleStores]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesTwoInternalDisks]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesTwoInternalDisks]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesVirtualDisk]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesVirtualDisk]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesWhenBootedFromUSB]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesWhenBootedFromUSB]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRenumberedDisksNeverAssumeDisk0]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRenumberedDisksNeverAssumeDisk0]' passed (0.001 seconds).
+Test Suite 'DiskPlannerTests' passed at 2026-11-05 01:11:09.444.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.021 (0.022) seconds
+Test Suite 'EdgeSwipeTests' started at 2026-11-05 01:11:09.445.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testMiddleIsNotAnEdge]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testMiddleIsNotAnEdge]' passed (0.002 seconds).
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSideAndBottomEdges]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSideAndBottomEdges]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSwipeUpFromAnywhereInDockBand]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSwipeUpFromAnywhereInDockBand]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testTopEdgeSwipe]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testTopEdgeSwipe]' passed (0.000 seconds).
+Test Suite 'EdgeSwipeTests' passed at 2026-11-05 01:11:09.448.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'FloatingLayoutTests' started at 2026-11-05 01:11:09.448.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampOriginKeepsOnScreen]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampOriginKeepsOnScreen]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampWidth]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampWidth]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testDecodeRejectsBadValues]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testDecodeRejectsBadValues]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testKeysScaleWithWidth]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testKeysScaleWithWidth]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testOpacityCycles]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testOpacityCycles]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testPersistenceRoundTrip]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testPersistenceRoundTrip]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testResizeKeepsTopLeftAndFits]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testResizeKeepsTopLeftAndFits]' passed (0.000 seconds).
+Test Suite 'FloatingLayoutTests' passed at 2026-11-05 01:11:09.452.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'FocusClassifierTests' started at 2026-11-05 01:11:09.452.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testBrowserContentEditable]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testBrowserContentEditable]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testHideDebounce]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testHideDebounce]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNativeFields]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNativeFields]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNonText]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNonText]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testOwnPanel]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testOwnPanel]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testPasswordField]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testPasswordField]' passed (0.000 seconds).
+Test Suite 'FocusClassifierTests' passed at 2026-11-05 01:11:09.454.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'GeometryTests' started at 2026-11-05 01:11:09.454.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testAXConversion]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testAXConversion]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testMoreSpaceScaling]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testMoreSpaceScaling]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testPlacementAvoidsField]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testPlacementAvoidsField]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testSurfacePro7Sizing]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testSurfacePro7Sizing]' passed (0.000 seconds).
+Test Suite 'GeometryTests' passed at 2026-11-05 01:11:09.456.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'HardwareCheckTests' started at 2026-11-05 01:11:09.456.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsI3]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsI3]' passed (0.000 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsOtherMachines]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsOtherMachines]' passed (0.000 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsPro7Plus]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsPro7Plus]' passed (0.000 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsWithoutSurfaceDrivers]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsWithoutSurfaceDrivers]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testSurfacePro7i5]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testSurfacePro7i5]' passed (0.000 seconds).
+Test Suite 'HardwareCheckTests' passed at 2026-11-05 01:11:09.459.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'KeyboardStateTests' started at 2026-11-05 01:11:09.459.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCapsLockPersists]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCapsLockPersists]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCommandCIsCopy]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCommandCIsCopy]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testHide]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testHide]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testKeyCodes]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testKeyCodes]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testLowercaseByDefault]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testLowercaseByDefault]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testModifierKeysPresentAndRowsAligned]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testModifierKeysPresentAndRowsAligned]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRepeatingKeys]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRepeatingKeys]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRequiredKeysPresent]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRequiredKeysPresent]' passed (0.002 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftedPunctuation]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftedPunctuation]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftIsOneShot]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftIsOneShot]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShortcutIgnoresAutoCapitalAndCapsLock]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShortcutIgnoresAutoCapitalAndCapsLock]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSpecialKeys]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSpecialKeys]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSymbolsLayer]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSymbolsLayer]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testUserShiftAndMultipleModifiers]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testUserShiftAndMultipleModifiers]' passed (0.001 seconds).
+Test Suite 'KeyboardStateTests' passed at 2026-11-05 01:11:09.470.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.010 (0.011) seconds
+Test Suite 'MenuAlternatesTests' started at 2026-11-05 01:11:09.470.
+Test Case '-[TouchKeyboardCoreTests.MenuAlternatesTests testAlternatesAreDropped]' started.
+Test Case '-[TouchKeyboardCoreTests.MenuAlternatesTests testAlternatesAreDropped]' passed (0.001 seconds).
+Test Suite 'MenuAlternatesTests' passed at 2026-11-05 01:11:09.471.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'PointerSourceTests' started at 2026-11-05 01:11:09.471.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testDockSlideDoesNotShowPointer]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testDockSlideDoesNotShowPointer]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapAfterMouseHides]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapAfterMouseHides]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapsHideEvenWhenClose]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapsHideEvenWhenClose]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testMouseStreamShowsAndMouseClickKeepsIt]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testMouseStreamShowsAndMouseClickKeepsIt]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTabletSubtypeIsTouch]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTabletSubtypeIsTouch]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTrackpadContactShowsPointer]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTrackpadContactShowsPointer]' passed (0.000 seconds).
+Test Suite 'PointerSourceTests' passed at 2026-11-05 01:11:09.474.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'TouchSequencerTests' started at 2026-11-05 01:11:09.475.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testDuplicateDownIgnored]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testDuplicateDownIgnored]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testLongPressHandoverIsOneTouch]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testLongPressHandoverIsOneTouch]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testRepeatPolicy]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testRepeatPolicy]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testSimpleTap]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testSimpleTap]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testTwoQuickTapsAreTwoTouches]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testTwoQuickTapsAreTwoTouches]' passed (0.000 seconds).
+Test Suite 'TouchSequencerTests' passed at 2026-11-05 01:11:09.477.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'TypingAssistTests' started at 2026-11-05 01:11:09.477.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAccents]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAccents]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAcceptSuggestionReplacesWord]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAcceptSuggestionReplacesWord]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAfterSentence]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAfterSentence]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAtStartOfEmptyField]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAtStartOfEmptyField]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceFullStop]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceFullStop]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceTooSlowOrAfterPunctuation]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceTooSlowOrAfterPunctuation]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testNoCapitalInNonEmptyOrUnknownField]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testNoCapitalInNonEmptyOrUnknownField]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testPasswordFieldsAreUntouched]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testPasswordFieldsAreUntouched]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testResetOnArrowsAndFocus]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testResetOnArrowsAndFocus]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testWordTracking]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testWordTracking]' passed (0.000 seconds).
+Test Suite 'TypingAssistTests' passed at 2026-11-05 01:11:09.483.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'SurfaceTouchMacPackageTests.xctest' passed at 2026-11-05 01:11:09.483.
+	 Executed 71 tests, with 0 failures (0 unexpected) in 0.052 (0.060) seconds
+Test Suite 'All tests' passed at 2026-11-05 01:11:09.483.
+	 Executed 71 tests, with 0 failures (0 unexpected) in 0.052 (0.063) seconds
+◇ Test run started.
+↳ Testing Library Version: 124.4
+↳ Target Platform: x86_64-apple-macos14.0
+✔ Test run with 0 tests passed after 0.001 seconds.

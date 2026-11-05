@@ -1,0 +1,858 @@
+### step __run
+ProductName:		macOS
+ProductVersion:		15.7.9
+BuildVersion:		24G830
+x86_64
+Xcode 16.4
+Build version 16F6
+swift-driver version: 1.120.5 Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+Target: x86_64-apple-macosx15.0
+Rosetta not needed: native x86_64 runner
+### step __run_2
+== base EFI: balopez83/Surface-Pro-7-Hackintosh 2.5.0
+total 70192
+drwxr-xr-x  3 runner  staff        96 Nov  5 01:07 .
+drwxr-xr-x  4 runner  staff       128 Nov  5 01:07 ..
+-rw-r--r--  1 runner  staff  35936076 Nov  5 01:07 EFI_OCmodr1.0.5_r2.5.0.7z
+89db5410531f974042cfc393d85969ac8b65efcdceb4557bc6b714dc81e3720a  EFI_OCmodr1.0.5_r2.5.0.7z
+base EFI asset matches pinned sha256
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/BOOT
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/ACPI
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/Tools
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/Drivers
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/Kexts
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/Resources
+== config candidates
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/config-i7.plist
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/unz/EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI/OC/config-i5.plist
+base EFI folder: EFI_OCmodr1.0.5_r2.5.0.7z.d/EFI
+using config: config-i5.plist
+bundled OpenCore: 1.0.5 (from base asset name (OCmod r1.0.5))
+== official OpenCore 1.0.5 utilities (ocvalidate, macserial)
+2608743afe81001114a85b6fba6555edbc43813b82538e1f70220aeb0662d8be  /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/download/oc.zip
+WARN OpenCore.efi differs from official 1.0.5 RELEASE (DEBUG build or modified)
+== Lilu version in base EFI
+Lilu: 1.7.1
+VirtualSMC: 1.3.7
+fetch stage done
+### step __run_3
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/patches/0001-BigSurfaceHIDDriver-kernel-multitouch.patch:133: trailing whitespace.
+    
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/patches/0001-BigSurfaceHIDDriver-kernel-multitouch.patch:262: trailing whitespace.
+    
+Checking patch BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.cpp...
+Checking patch BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.hpp...
+Applied patch BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.cpp cleanly.
+Applied patch BigSurfaceHIDDriver/IPTS/IntelPreciseTouchStylusDriver.hpp cleanly.
+warning: 2 lines add whitespace errors.
+Checking patch BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp...
+Checking patch BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.hpp...
+Applied patch BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.cpp cleanly.
+Applied patch BigSurfaceHIDDriver/HIDEventDriver/SurfaceTouchscreenHIDEventDriver.hpp cleanly.
+Lilu SDK: 1.7.1
+VirtualSMC SDK: 1.3.7
+** BUILD SUCCEEDED **
+== VoodooInput 1.1.7 (acidanthera), as in the base EFI's custom build
+me.kishorprins.VoodooInput 1.1.7 
+== kext checks
+Non-fat file: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext/Contents/MacOS/BigSurface is architecture: x86_64
+Non-fat file: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext/Contents/MacOS/BigSurfaceHIDDriver is architecture: x86_64
+Non-fat file: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext/Contents/PlugIns/VoodooGPIO.kext/Contents/MacOS/VoodooGPIO is architecture: x86_64
+Non-fat file: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext/Contents/PlugIns/VoodooInput.kext/Contents/MacOS/VoodooInput is architecture: x86_64
+Non-fat file: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext/Contents/PlugIns/VoodooSerial.kext/Contents/MacOS/VoodooSerial is architecture: x86_64
+00000000000033c0 T IntelPreciseTouchStylusDriver::kernelTouch(stm::TouchFrame const&)
+0000000000003570 T IntelPreciseTouchStylusDriver::kernelStylus(stm::StylusFrame const&)
+0000000000008f80 t stm::FrameParser::parseStylus(stm::Reader&, stm::FrameParser::Sink&, bool)
+0000000000007020 t stm::FrameParser::parseReports(stm::Reader&, stm::FrameParser::Sink&)
+00000000000071d0 t stm::FrameParser::handleHeatmap(stm::Reader&, stm::FrameParser::Sink&)
+0000000000005da0 t stm::FrameParser::parseRawPayload(unsigned char const*, unsigned int, stm::FrameParser::Sink&)
+0000000000005de0 t stm::FrameParser::parse(unsigned char const*, unsigned int, stm::FrameParser::Sink&)
+0000000000006e30 t stm::FrameParser::parseRaw(stm::Reader&, stm::FrameParser::Sink&)
+0000000000004320 t stm::HeatmapProcessor::HeatmapProcessor()
+kernel multitouch symbols present
+iPad-style gesture symbols present
+ .../SurfaceTouchscreenHIDEventDriver.cpp           | 151 ++++++++++++++++++++-
+ .../SurfaceTouchscreenHIDEventDriver.hpp           |  16 +++
+ .../IPTS/IntelPreciseTouchStylusDriver.cpp         | 145 +++++++++++++++++++-
+ .../IPTS/IntelPreciseTouchStylusDriver.hpp         |  26 ++++
+ 4 files changed, 330 insertions(+), 8 deletions(-)
+BUILT: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build/BigSurface.kext
+### step __run_4
+com.zxystd.AirportItlwm
+2.4.0
+BUILT: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/kext/build-itlwm/AirportItlwm-Tahoe.kext (executable AirportItlwm)
+### step __run_5
+== replace BigSurface.kext with SurfaceTouchMac build
+comparison with base EFI's prebuilt BigSurface-6.6RC-Custom: efi/build/bigsurface-compare.txt
+== add AirportItlwm for Tahoe
+disable BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooGPIO.kext (base EFI prebuilt, kept as fallback)
+disable BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooSerial.kext (base EFI prebuilt, kept as fallback)
+disable BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooInput.kext (base EFI prebuilt, kept as fallback)
+disable BigSurface-6.6RC-Custom.kext (base EFI prebuilt, kept as fallback)
+disable BigSurface-6.6RC-Custom.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext (base EFI prebuilt, kept as fallback)
+enable  BigSurface.kext/Contents/PlugIns/VoodooGPIO.kext (SurfaceTouchMac source build)
+enable  BigSurface.kext/Contents/PlugIns/VoodooSerial.kext (SurfaceTouchMac source build)
+enable  BigSurface.kext/Contents/PlugIns/VoodooInput.kext (SurfaceTouchMac source build)
+enable  BigSurface.kext (SurfaceTouchMac source build)
+enable  BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext (SurfaceTouchMac source build)
+add     AirportItlwm-Tahoe.kext (MinKernel 25.0.0, MaxKernel 25.99.99)
+Kernel quirks of note: {'DisableLinkeditJettison': True, 'AppleXcpmCfgLock': True, 'PowerTimeoutKernelPanic': True}
+SecureBootModel: Disabled
+== SMBIOS placeholders (generated per device at install time)
+SMBIOS model: MacBookPro16,2
+== boot-args
+-lilubetaall revpatch=sbvmm
+== validation: ocvalidate 1.0.5
+fork-only keys removed for the official validator: 2
+   /ACPI/Quirks/EnableForAll=False
+   /Booter/Quirks/EnableForAll=False
+
+NOTE: This version of ocvalidate is only compatible with OpenCore version 1.0.5!
+
+
+Completed validating /var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/ocv.wvoKaXL1u0.plist in 2 ms. No issues found.
+== validation: check_efi.py
+check_efi: 0 error(s), 0 warning(s)
+== kexts (from manifest)
+AirportItlwm-BigSur.kext                                                 2.3.0      enabled=True  Min=20.0.0 Max=20.9.9
+AirportItlwm-Catalina.kext                                               2.3.0      enabled=True  Min=19.0.0 Max=19.9.9
+AirportItlwm-Monterey.kext                                               2.3.0      enabled=True  Min=21.0.0 Max=21.9.9
+AirportItlwm-Sonoma.kext                                                 2.3.0      enabled=True  Min=23.0.0 Max=23.3.9
+AirportItlwm-Sonoma144.kext                                              2.3.0      enabled=True  Min=23.4.0 Max=23.9.9
+AirportItlwm-Tahoe.kext                                                  2.4.0      enabled=True  Min=25.0.0 Max=25.99.99
+AirportItlwm-Ventura.kext                                                2.3.0      enabled=True  Min=22.0.0 Max=22.9.9
+AppleALC.kext                                                            1.9.5      enabled=True  Min=- Max=-
+BigSurface-6.6RC-Custom.kext                                             1.2.0      enabled=False Min=- Max=-
+BigSurface-6.6RC-Custom.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext   1.0        enabled=False Min=- Max=-
+BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooGPIO.kext            1.2.0      enabled=False Min=- Max=-
+BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooInput.kext           1.1.7      enabled=False Min=- Max=-
+BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooSerial.kext          1.2        enabled=False Min=- Max=-
+BigSurface.kext                                                          1.2.0      enabled=True  Min=- Max=-
+BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext                1.0        enabled=True  Min=- Max=-
+BigSurface.kext/Contents/PlugIns/VoodooGPIO.kext                         1.2.0      enabled=True  Min=- Max=-
+BigSurface.kext/Contents/PlugIns/VoodooInput.kext                        1.1.7      enabled=True  Min=- Max=-
+BigSurface.kext/Contents/PlugIns/VoodooSerial.kext                       1.2        enabled=True  Min=- Max=-
+BlueToolFixup.kext                                                       2.7.1      enabled=True  Min=- Max=-
+HoRNDIS.kext                                                             9.2        enabled=True  Min=- Max=-
+IntelBluetoothFirmware.kext                                              2.4.0      enabled=True  Min=- Max=-
+Lilu.kext                                                                1.7.1      enabled=True  Min=- Max=-
+NVMeFix.kext                                                             1.1.3      enabled=True  Min=- Max=-
+RestrictEvents.kext                                                      1.1.6      enabled=True  Min=- Max=-
+SMCProcessor.kext                                                        1.3.7      enabled=True  Min=- Max=-
+SMCSuperIO.kext                                                          1.3.7      enabled=True  Min=- Max=-
+TypeCover3.kext                                                          2.2.0      enabled=True  Min=- Max=-
+USBMap.kext                                                              1.0        enabled=True  Min=- Max=-
+VirtualSMC.kext                                                          1.3.7      enabled=True  Min=- Max=-
+VoodooInput.kext                                                         1.1.6      enabled=False Min=- Max=-
+WhateverGreen.kext                                                       1.7.0      enabled=True  Min=- Max=-
+EFI ready: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/efi/build/EFI
+### step __run_6
+Building for debugging...
+[0/20] /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/keyboard/.build/x86_64-apple-macosx/debug/SurfaceTouchMacPackageTests.derived/runner.swift
+[0/20] Write sources
+[4/20] Write stm-setup-entitlement.plist
+[4/20] Write SurfaceTouchKeys-entitlement.plist
+[7/20] Write sources
+[9/20] Copying Fixtures
+[9/20] Write sources
+[11/20] Write swift-version--79AA4F9932D1E87A.txt
+[13/30] Compiling TouchKeyboardCore Layout.swift
+[14/30] Compiling TouchKeyboardCore TouchSequencer.swift
+[15/30] Emitting module TouchKeyboardCore
+[16/30] Compiling TouchKeyboardCore Geometry.swift
+[17/30] Compiling TouchKeyboardCore KeyboardState.swift
+[18/30] Compiling TouchKeyboardCore FloatingLayout.swift
+[19/30] Compiling TouchKeyboardCore FocusClassifier.swift
+[20/31] Compiling TouchKeyboardCore TypingAssist.swift
+[21/31] Compiling SurfaceSetupCore HardwareCheck.swift
+[22/31] Emitting module SurfaceSetupCore
+[23/31] Compiling SurfaceSetupCore DiskPlanner.swift
+[24/44] Emitting module stm_setup
+[25/44] Compiling stm_setup main.swift
+[25/44] Write Objects.LinkFileList
+[26/44] Linking stm-setup
+[27/44] Applying stm-setup
+[29/44] Compiling SurfaceTouchKeys TouchServices.swift
+[30/44] Compiling SurfaceTouchKeys CISelfTest.swift
+[31/44] Emitting module SurfaceTouchKeys
+[32/44] Compiling SurfaceTouchKeys main.swift
+[32/44] Write Objects.LinkFileList
+[33/44] Linking SurfaceTouchKeys
+[34/44] Applying SurfaceTouchKeys
+[36/44] Compiling SurfaceSetupCoreTests resource_bundle_accessor.swift
+[37/44] Compiling TouchKeyboardCoreTests TypingAssistTests.swift
+[38/44] Emitting module SurfaceSetupCoreTests
+[39/44] Compiling SurfaceSetupCoreTests SurfaceSetupCoreTests.swift
+[40/44] Compiling TouchKeyboardCoreTests FloatingLayoutTests.swift
+[41/44] Emitting module TouchKeyboardCoreTests
+[42/44] Compiling TouchKeyboardCoreTests TouchKeyboardCoreTests.swift
+[43/46] Compiling SurfaceTouchMacPackageTests runner.swift
+[44/46] Emitting module SurfaceTouchMacPackageTests
+[44/46] Write Objects.LinkFileList
+[45/46] Linking SurfaceTouchMacPackageTests
+Build complete! (54.24s)
+Test Suite 'All tests' started at 2026-11-05 01:11:09.420.
+Test Suite 'SurfaceTouchMacPackageTests.xctest' started at 2026-11-05 01:11:09.423.
+Test Suite 'DiskPlannerTests' started at 2026-11-05 01:11:09.423.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testDualBootKeepsSharedEFI]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testDualBootKeepsSharedEFI]' passed (0.006 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testNormalInternalSSDWithUSBAndSDAttached]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testNormalInternalSSDWithUSBAndSDAttached]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesEFINotFirst]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesEFINotFirst]' passed (0.005 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMissingEFI]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMissingEFI]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMultipleStores]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesMultipleStores]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesTwoInternalDisks]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesTwoInternalDisks]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesVirtualDisk]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesVirtualDisk]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesWhenBootedFromUSB]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRefusesWhenBootedFromUSB]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRenumberedDisksNeverAssumeDisk0]' started.
+Test Case '-[SurfaceSetupCoreTests.DiskPlannerTests testRenumberedDisksNeverAssumeDisk0]' passed (0.001 seconds).
+Test Suite 'DiskPlannerTests' passed at 2026-11-05 01:11:09.444.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.021 (0.022) seconds
+Test Suite 'EdgeSwipeTests' started at 2026-11-05 01:11:09.445.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testMiddleIsNotAnEdge]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testMiddleIsNotAnEdge]' passed (0.002 seconds).
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSideAndBottomEdges]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSideAndBottomEdges]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSwipeUpFromAnywhereInDockBand]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testSwipeUpFromAnywhereInDockBand]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testTopEdgeSwipe]' started.
+Test Case '-[TouchKeyboardCoreTests.EdgeSwipeTests testTopEdgeSwipe]' passed (0.000 seconds).
+Test Suite 'EdgeSwipeTests' passed at 2026-11-05 01:11:09.448.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'FloatingLayoutTests' started at 2026-11-05 01:11:09.448.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampOriginKeepsOnScreen]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampOriginKeepsOnScreen]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampWidth]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testClampWidth]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testDecodeRejectsBadValues]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testDecodeRejectsBadValues]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testKeysScaleWithWidth]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testKeysScaleWithWidth]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testOpacityCycles]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testOpacityCycles]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testPersistenceRoundTrip]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testPersistenceRoundTrip]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testResizeKeepsTopLeftAndFits]' started.
+Test Case '-[TouchKeyboardCoreTests.FloatingLayoutTests testResizeKeepsTopLeftAndFits]' passed (0.000 seconds).
+Test Suite 'FloatingLayoutTests' passed at 2026-11-05 01:11:09.452.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'FocusClassifierTests' started at 2026-11-05 01:11:09.452.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testBrowserContentEditable]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testBrowserContentEditable]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testHideDebounce]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testHideDebounce]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNativeFields]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNativeFields]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNonText]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testNonText]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testOwnPanel]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testOwnPanel]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testPasswordField]' started.
+Test Case '-[TouchKeyboardCoreTests.FocusClassifierTests testPasswordField]' passed (0.000 seconds).
+Test Suite 'FocusClassifierTests' passed at 2026-11-05 01:11:09.454.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'GeometryTests' started at 2026-11-05 01:11:09.454.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testAXConversion]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testAXConversion]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testMoreSpaceScaling]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testMoreSpaceScaling]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testPlacementAvoidsField]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testPlacementAvoidsField]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testSurfacePro7Sizing]' started.
+Test Case '-[TouchKeyboardCoreTests.GeometryTests testSurfacePro7Sizing]' passed (0.000 seconds).
+Test Suite 'GeometryTests' passed at 2026-11-05 01:11:09.456.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.001 (0.002) seconds
+Test Suite 'HardwareCheckTests' started at 2026-11-05 01:11:09.456.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsI3]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsI3]' passed (0.000 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsOtherMachines]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsOtherMachines]' passed (0.000 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsPro7Plus]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsPro7Plus]' passed (0.000 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsWithoutSurfaceDrivers]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testRejectsWithoutSurfaceDrivers]' passed (0.001 seconds).
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testSurfacePro7i5]' started.
+Test Case '-[SurfaceSetupCoreTests.HardwareCheckTests testSurfacePro7i5]' passed (0.000 seconds).
+Test Suite 'HardwareCheckTests' passed at 2026-11-05 01:11:09.459.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'KeyboardStateTests' started at 2026-11-05 01:11:09.459.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCapsLockPersists]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCapsLockPersists]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCommandCIsCopy]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testCommandCIsCopy]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testHide]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testHide]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testKeyCodes]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testKeyCodes]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testLowercaseByDefault]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testLowercaseByDefault]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testModifierKeysPresentAndRowsAligned]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testModifierKeysPresentAndRowsAligned]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRepeatingKeys]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRepeatingKeys]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRequiredKeysPresent]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testRequiredKeysPresent]' passed (0.002 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftedPunctuation]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftedPunctuation]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftIsOneShot]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShiftIsOneShot]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShortcutIgnoresAutoCapitalAndCapsLock]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testShortcutIgnoresAutoCapitalAndCapsLock]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSpecialKeys]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSpecialKeys]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSymbolsLayer]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testSymbolsLayer]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testUserShiftAndMultipleModifiers]' started.
+Test Case '-[TouchKeyboardCoreTests.KeyboardStateTests testUserShiftAndMultipleModifiers]' passed (0.001 seconds).
+Test Suite 'KeyboardStateTests' passed at 2026-11-05 01:11:09.470.
+	 Executed 14 tests, with 0 failures (0 unexpected) in 0.010 (0.011) seconds
+Test Suite 'MenuAlternatesTests' started at 2026-11-05 01:11:09.470.
+Test Case '-[TouchKeyboardCoreTests.MenuAlternatesTests testAlternatesAreDropped]' started.
+Test Case '-[TouchKeyboardCoreTests.MenuAlternatesTests testAlternatesAreDropped]' passed (0.001 seconds).
+Test Suite 'MenuAlternatesTests' passed at 2026-11-05 01:11:09.471.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'PointerSourceTests' started at 2026-11-05 01:11:09.471.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testDockSlideDoesNotShowPointer]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testDockSlideDoesNotShowPointer]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapAfterMouseHides]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapAfterMouseHides]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapsHideEvenWhenClose]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testFingerTapsHideEvenWhenClose]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testMouseStreamShowsAndMouseClickKeepsIt]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testMouseStreamShowsAndMouseClickKeepsIt]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTabletSubtypeIsTouch]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTabletSubtypeIsTouch]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTrackpadContactShowsPointer]' started.
+Test Case '-[TouchKeyboardCoreTests.PointerSourceTests testTrackpadContactShowsPointer]' passed (0.000 seconds).
+Test Suite 'PointerSourceTests' passed at 2026-11-05 01:11:09.474.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.003 (0.003) seconds
+Test Suite 'TouchSequencerTests' started at 2026-11-05 01:11:09.475.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testDuplicateDownIgnored]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testDuplicateDownIgnored]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testLongPressHandoverIsOneTouch]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testLongPressHandoverIsOneTouch]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testRepeatPolicy]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testRepeatPolicy]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testSimpleTap]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testSimpleTap]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testTwoQuickTapsAreTwoTouches]' started.
+Test Case '-[TouchKeyboardCoreTests.TouchSequencerTests testTwoQuickTapsAreTwoTouches]' passed (0.000 seconds).
+Test Suite 'TouchSequencerTests' passed at 2026-11-05 01:11:09.477.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'TypingAssistTests' started at 2026-11-05 01:11:09.477.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAccents]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAccents]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAcceptSuggestionReplacesWord]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testAcceptSuggestionReplacesWord]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAfterSentence]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAfterSentence]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAtStartOfEmptyField]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testCapitalAtStartOfEmptyField]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceFullStop]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceFullStop]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceTooSlowOrAfterPunctuation]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testDoubleSpaceTooSlowOrAfterPunctuation]' passed (0.001 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testNoCapitalInNonEmptyOrUnknownField]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testNoCapitalInNonEmptyOrUnknownField]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testPasswordFieldsAreUntouched]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testPasswordFieldsAreUntouched]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testResetOnArrowsAndFocus]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testResetOnArrowsAndFocus]' passed (0.000 seconds).
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testWordTracking]' started.
+Test Case '-[TouchKeyboardCoreTests.TypingAssistTests testWordTracking]' passed (0.000 seconds).
+Test Suite 'TypingAssistTests' passed at 2026-11-05 01:11:09.483.
+	 Executed 10 tests, with 0 failures (0 unexpected) in 0.005 (0.006) seconds
+Test Suite 'SurfaceTouchMacPackageTests.xctest' passed at 2026-11-05 01:11:09.483.
+	 Executed 71 tests, with 0 failures (0 unexpected) in 0.052 (0.060) seconds
+Test Suite 'All tests' passed at 2026-11-05 01:11:09.483.
+	 Executed 71 tests, with 0 failures (0 unexpected) in 0.052 (0.063) seconds
+◇ Test run started.
+↳ Testing Library Version: 124.4
+↳ Target Platform: x86_64-apple-macos14.0
+✔ Test run with 0 tests passed after 0.001 seconds.
+### step __run_7
+0%: Compute target dependency graph
+Building targets in dependency order
+Target dependency graph (6 targets)
+0%: Gather provisioning inputs
+0%: Create build description
+0%: Discovering version info for swiftc
+0%: Discovering version info for clang
+0%: Discovering version info for ld
+Build description signature: f7f0362c413583fbf639de9a91ba0e0c
+
+Build description path: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/keyboard/.build/apple/Intermediates.noindex/XCBuildData/f7f0362c413583fbf639de9a91ba0e0c.xcbuilddata
+
+0%: Create build directory $(TARGET_BUILD_DIR)
+0%: Build stat cache for /Applications/Xcode_16.4.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk
+0%: Create build directory $(OBJROOT)
+0%: Create build directory $(TARGET_BUILD_DIR)/Release
+0%: Create build directory $(OBJROOT)/EagerLinkingTBDs/Release
+0%: Create build directory $(TARGET_BUILD_DIR)/Release/PackageFrameworks
+0%: Write stm-setup.DependencyStaticMetadataFileList
+0%: Write stm-setup.DependencyMetadataFileList
+0%: Write stm-setup_const_extract_protocols.json (x86_64)
+0%: Write stm-setup.SwiftFileList (x86_64)
+0%: Write stm-setup.LinkFileList (x86_64)
+0%: Write stm-setup-OutputFileMap.json (x86_64)
+0%: Write stm-setup_const_extract_protocols.json (arm64)
+0%: Write stm-setup.SwiftFileList (arm64)
+0%: Write stm-setup.LinkFileList (arm64)
+0%: Write stm-setup-OutputFileMap.json (arm64)
+0%: Write TouchKeyboardCore_Module.DependencyStaticMetadataFileList
+0%: Write TouchKeyboardCore_Module.DependencyMetadataFileList
+0%: Write TouchKeyboardCore.modulemap
+0%: Write TouchKeyboardCore_Module_const_extract_protocols.json (x86_64)
+0%: Write TouchKeyboardCore_Module.SwiftFileList (x86_64)
+0%: Write TouchKeyboardCore_Module.SwiftConstValuesFileList
+0%: Write TouchKeyboardCore_Module.LinkFileList (x86_64)
+0%: Write TouchKeyboardCore_Module-OutputFileMap.json (x86_64)
+0%: Write TouchKeyboardCore_Module_const_extract_protocols.json (arm64)
+0%: Write TouchKeyboardCore_Module.SwiftFileList (arm64)
+0%: Write TouchKeyboardCore_Module.SwiftConstValuesFileList
+0%: Write TouchKeyboardCore_Module.LinkFileList (arm64)
+0%: Write TouchKeyboardCore_Module-OutputFileMap.json (arm64)
+0%: Copy TouchKeyboardCore.modulemap
+0%: Write empty-SurfaceTouchMac_SurfaceSetupCoreTests.plist
+0%: Write SurfaceTouchMac_SurfaceSetupCoreTests.DependencyStaticMetadataFileList
+0%: Write SurfaceTouchMac_SurfaceSetupCoreTests.DependencyMetadataFileList
+0%: Write SurfaceTouchKeys.DependencyStaticMetadataFileList
+0%: Write SurfaceTouchKeys.DependencyMetadataFileList
+0%: Write SurfaceTouchKeys_const_extract_protocols.json (x86_64)
+0%: Write SurfaceTouchKeys.SwiftFileList (x86_64)
+0%: Write SurfaceTouchKeys.LinkFileList (x86_64)
+27%: Write SurfaceTouchKeys-OutputFileMap.json (x86_64)
+27%: Write SurfaceTouchKeys_const_extract_protocols.json (arm64)
+27%: Write SurfaceTouchKeys.SwiftFileList (arm64)
+27%: Write SurfaceTouchKeys.LinkFileList (arm64)
+27%: Write SurfaceTouchKeys-OutputFileMap.json (arm64)
+27%: Write SurfaceSetupCore_Module.DependencyStaticMetadataFileList
+27%: Write SurfaceSetupCore_Module.DependencyMetadataFileList
+27%: Write SurfaceSetupCore.modulemap
+27%: Write SurfaceSetupCore_Module_const_extract_protocols.json (x86_64)
+27%: Write SurfaceSetupCore_Module.SwiftFileList (x86_64)
+27%: Write SurfaceSetupCore_Module.SwiftConstValuesFileList
+27%: Write SurfaceSetupCore_Module.LinkFileList (x86_64)
+27%: Write SurfaceSetupCore_Module-OutputFileMap.json (x86_64)
+27%: Write SurfaceSetupCore_Module_const_extract_protocols.json (arm64)
+27%: Write SurfaceSetupCore_Module.SwiftFileList (arm64)
+27%: Write SurfaceSetupCore_Module.SwiftConstValuesFileList
+27%: Write SurfaceSetupCore_Module.LinkFileList (arm64)
+27%: Write SurfaceSetupCore_Module-OutputFileMap.json (arm64)
+27%: Copy SurfaceSetupCore.modulemap
+27%: Create directory Resources
+27%: Create directory Contents
+27%: Create directory SurfaceTouchMac_SurfaceSetupCoreTests.bundle
+27%: Process empty-SurfaceTouchMac_SurfaceSetupCoreTests.plist
+27%: Copy Fixtures
+27%: Register execution policy exception for SurfaceTouchMac_SurfaceSetupCoreTests.bundle
+27%: Touch SurfaceTouchMac_SurfaceSetupCoreTests.bundle
+47%: Planning Swift module TouchKeyboardCore (x86_64)
+47%: Planning Swift module TouchKeyboardCore (arm64)
+47%: Planning Swift module SurfaceSetupCore (arm64)
+47%: Planning Swift module SurfaceSetupCore (x86_64)
+48%: Compile SurfaceSetupCore_Module (arm64)
+48%: Compiling FloatingLayout.swift, FocusClassifier.swift, Geometry.swift, KeyboardState.swift, Layout.swift, TouchSequencer.swift, TypingAssist.swift
+48%: Compiling FloatingLayout.swift, FocusClassifier.swift, Geometry.swift, KeyboardState.swift, Layout.swift, TouchSequencer.swift, TypingAssist.swift
+48%: Compiling DiskPlanner.swift, HardwareCheck.swift
+48%: Compile TouchKeyboardCore_Module (x86_64)
+48%: Compiling DiskPlanner.swift, HardwareCheck.swift
+48%: Compile 2 Swift source files (arm64)
+48%: Compile 7 Swift source files (arm64)
+48%: Compile 7 Swift source files (x86_64)
+48%: Compile 2 Swift source files (x86_64)
+51%: Compile TouchKeyboardCore_Module (arm64)
+51%: Discovering Swift tasks after 'Compiling DiskPlanner.swift, HardwareCheck.swift'
+51%: Compile SurfaceSetupCore_Module (x86_64)
+51%: Unblock downstream dependents of SurfaceSetupCore_Module (arm64)
+51%: Copy SurfaceSetupCore.swiftmodule (arm64)
+51%: Copy SurfaceSetupCore.swiftdoc (arm64)
+51%: Copy SurfaceSetupCore.abi.json (arm64)
+51%: Copy SurfaceSetupCore.swiftsourceinfo (arm64)
+56%: Discovering Swift tasks after 'Compiling DiskPlanner.swift, HardwareCheck.swift'
+56%: Unblock downstream dependents of SurfaceSetupCore_Module (x86_64)
+56%: Merge Objective-C generated interface headers
+56%: Copy SurfaceSetupCore.swiftmodule (x86_64)
+56%: Copy SurfaceSetupCore.swiftdoc (x86_64)
+56%: Copy SurfaceSetupCore.abi.json (x86_64)
+56%: Copy SurfaceSetupCore.swiftsourceinfo (x86_64)
+56%: Link SurfaceSetupCore_Module.o (x86_64)
+56%: Link SurfaceSetupCore_Module.o (arm64)
+62%: Planning Swift module stm_setup (arm64)
+62%: Planning Swift module stm_setup (x86_64)
+62%: Create universal binary SurfaceSetupCore_Module.o
+62%: Compile stm-setup (x86_64)
+62%: Compiling main.swift
+62%: Compiling main.swift
+62%: Compile main.swift (x86_64)
+62%: Compile main.swift (arm64)
+64%: Compile stm-setup (arm64)
+64%: Discovering Swift tasks after 'Compiling FloatingLayout.swift, FocusClassifier.swift, Geometry.swift, KeyboardState.swift, Layout.swift, TouchSequencer.swift, TypingAssist.swift'
+64%: Unblock downstream dependents of TouchKeyboardCore_Module (arm64)
+64%: Extract app intents metadata
+2026-11-05 01:11:53.100 appintentsmetadataprocessor[8616:27091] Starting appintentsmetadataprocessor export
+2026-11-05 01:11:53.265 appintentsmetadataprocessor[8616:27091] Extracted no relevant App Intents symbols, skipping writing output
+
+66%: Copy TouchKeyboardCore.swiftmodule (arm64)
+66%: Copy TouchKeyboardCore.swiftdoc (arm64)
+66%: Copy TouchKeyboardCore.abi.json (arm64)
+66%: Copy TouchKeyboardCore.swiftsourceinfo (arm64)
+66%: Register execution policy exception for SurfaceSetupCore_Module.o
+70%: Discovering Swift tasks after 'Compiling FloatingLayout.swift, FocusClassifier.swift, Geometry.swift, KeyboardState.swift, Layout.swift, TouchSequencer.swift, TypingAssist.swift'
+70%: Unblock downstream dependents of TouchKeyboardCore_Module (x86_64)
+70%: Merge Objective-C generated interface headers
+70%: Copy TouchKeyboardCore.swiftmodule (x86_64)
+70%: Copy TouchKeyboardCore.swiftdoc (x86_64)
+70%: Copy TouchKeyboardCore.abi.json (x86_64)
+70%: Copy TouchKeyboardCore.swiftsourceinfo (x86_64)
+70%: Link TouchKeyboardCore_Module.o (x86_64)
+70%: Link TouchKeyboardCore_Module.o (arm64)
+75%: Planning Swift module SurfaceTouchKeys (x86_64)
+75%: Planning Swift module SurfaceTouchKeys (arm64)
+75%: Create universal binary TouchKeyboardCore_Module.o
+75%: Compiling CISelfTest.swift, TouchServices.swift, main.swift
+75%: Compiling CISelfTest.swift, TouchServices.swift, main.swift
+75%: Compile 3 Swift source files (arm64)
+75%: Compile 3 Swift source files (x86_64)
+76%: Compile SurfaceTouchKeys (x86_64)
+76%: Discovering Swift tasks after 'Compiling main.swift'
+76%: Compile SurfaceTouchKeys (arm64)
+76%: Unblock downstream dependents of stm-setup (x86_64)
+76%: Link stm-setup (x86_64)
+79%: Discovering Swift tasks after 'Compiling main.swift'
+79%: Copy stm_setup.swiftmodule (x86_64)
+79%: Unblock downstream dependents of stm-setup (arm64)
+79%: Copy stm_setup.swiftdoc (x86_64)
+79%: Link stm-setup (arm64)
+79%: Copy stm_setup.abi.json (x86_64)
+82%: Copy stm_setup.swiftmodule (arm64)
+82%: Copy stm_setup.swiftdoc (arm64)
+82%: Copy stm_setup.abi.json (arm64)
+82%: Copy stm_setup.swiftsourceinfo (x86_64)
+82%: Copy stm_setup.swiftsourceinfo (arm64)
+82%: Extract app intents metadata
+86%: Create universal binary stm-setup
+86%: Generate stm-setup.dSYM for stm-setup
+2026-11-05 01:11:58.650 appintentsmetadataprocessor[8717:27372] Starting appintentsmetadataprocessor export
+2026-11-05 01:11:58.874 appintentsmetadataprocessor[8717:27372] Extracted no relevant App Intents symbols, skipping writing output
+
+86%: Register execution policy exception for TouchKeyboardCore_Module.o
+89%: Register execution policy exception for stm-setup
+89%: Discovering Swift tasks after 'Compiling CISelfTest.swift, TouchServices.swift, main.swift'
+89%: Unblock downstream dependents of SurfaceTouchKeys (x86_64)
+89%: Link SurfaceTouchKeys (x86_64)
+89%: Copy SurfaceTouchKeys.swiftmodule (x86_64)
+89%: Copy SurfaceTouchKeys.swiftdoc (x86_64)
+89%: Copy SurfaceTouchKeys.abi.json (x86_64)
+89%: Copy SurfaceTouchKeys.swiftsourceinfo (x86_64)
+93%: Discovering Swift tasks after 'Compiling CISelfTest.swift, TouchServices.swift, main.swift'
+93%: Unblock downstream dependents of SurfaceTouchKeys (arm64)
+93%: Link SurfaceTouchKeys (arm64)
+93%: Copy SurfaceTouchKeys.swiftmodule (arm64)
+93%: Copy SurfaceTouchKeys.swiftdoc (arm64)
+93%: Copy SurfaceTouchKeys.abi.json (arm64)
+93%: Copy SurfaceTouchKeys.swiftsourceinfo (arm64)
+97%: Create universal binary SurfaceTouchKeys
+97%: Generate SurfaceTouchKeys.dSYM for SurfaceTouchKeys
+99%: Register execution policy exception for SurfaceTouchKeys
+100%: Build succeeded
+Build complete!
+== architecture
+Architectures in the fat file: dist/SurfaceTouchKeys.app/Contents/MacOS/SurfaceTouchKeys are: x86_64 arm64 
+Architectures in the fat file: dist/stm-setup are: x86_64 arm64 
+== signature
+Identifier=com.kaminofilms.surfacetouchkeys
+Signature=adhoc
+TeamIdentifier=not set
+Runtime Version=15.5.0
+== minimum OS (x86_64 slice)
+    minos 13.0
+### step __run_8
+## structural self-test
+CHECK panel_nonactivating PASS 
+CHECK panel_never_key PASS 
+CHECK fits_screen PASS panel=(352.0, 93.0, 1216.0, 406.0) visible=(0.0, 85.0, 1920.0, 970.0)
+CHECK touch_sized_keys PASS min=96x72pt keys=55
+CHECK surface_pro7_metrics PASS unit=96 keyH=72 size=1216x376
+CHECK floating_mode PASS frame=(580.0, 145.0, 760.0, 297.0) width=760
+CHECK floating_keys_usable PASS keys=55
+CHECK drag_clamped_on_screen PASS frame=(0.0, 758.0, 760.0, 297.0)
+CHECK resize_min_width PASS width=420
+CHECK opacity_applies PASS alpha=0.85
+CHECK docked_restored PASS 
+CHECK accent_popup PASS long press on e
+CHECK no_accents_for_k PASS 
+## interactive test (TextEdit)
+CHECK panel_nonactivating PASS 
+CHECK panel_never_key PASS 
+CHECK fits_screen PASS panel=(352.0, 93.0, 1216.0, 406.0) visible=(0.0, 85.0, 1920.0, 970.0)
+CHECK touch_sized_keys PASS min=96x72pt keys=55
+CHECK surface_pro7_metrics PASS unit=96 keyH=72 size=1216x376
+CHECK floating_mode PASS frame=(0.0, 874.0, 420.0, 181.0) width=420
+CHECK floating_keys_usable PASS keys=55
+CHECK drag_clamped_on_screen PASS frame=(0.0, 874.0, 420.0, 181.0)
+CHECK resize_min_width PASS width=420
+CHECK opacity_applies PASS alpha=0.85
+CHECK docked_restored PASS 
+CHECK accent_popup PASS long press on e
+CHECK no_accents_for_k PASS 
+CHECK accessibility_trusted PASS 
+CHECK textedit_frontmost PASS 
+CHECK auto_show_on_text_focus PASS 
+CHECK taps_reached_keys PASS key outputs emitted by taps: 2
+CHECK post_event_access PASS CGPreflightPostEventAccess
+CHECK focused_text_length PASS characters in TextEdit document: 3 (expected 3)
+CHECK auto_capital_start PASS document starts with 'Hi!'
+CHECK edit_buttons_present PASS buttons=["Keyboard transparency", "Float keyboard", "Undo", "Cut", "Copy", "Paste", "Suggestion", "Suggestion", "Suggestion"]
+CHECK command_key_select_all_and_copy PASS ⌘ latched=true, copied 3 chars, document 3 chars
+CHECK pointer_hides_from_background WARN visible before=0 hidden=0 after=0
+CHECK touch_menu_reads_items PASS rows=24
+CHECK touch_menu_no_alternates WARN raw=21 shown=17: New | Open… | Open Recent | Close | Close All | Save… | Save As… | Duplicate | Rename… | Move To… | Revert To | <<Import From Device - unlocalized>> | Export as PDF… | Share | Show Properties | Page Setup… | Print…
+CHECK touch_menu_rows_finger_sized PASS rows=24 minHeight=46
+CHECK target_app_keeps_focus PASS frontmost=com.apple.TextEdit
+TYPED_EXPECTED hi!
+osascript read-back stderr: 35:39: execution error: TextEdit got an error: AppleEvent timed out. (-1712)
+CHECK typed_text PASS TextEdit contains hi! (2 taps + 1 direct post)
+## summary
+passed: 39
+skipped: 0
+failed: 0
+### step __run_9
+warning: refs/tags/v4.0.0 1fcf53a2f64c72c76f5d84adb50d41e6c4467d23 is not a commit!
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/contacts/advanced/detector.cpp:7:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/contacts/advanced/detector.hpp:6:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/contacts/advanced/algorithm/gaussian_fitting.hpp:15:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/spdlog.h:12:
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/common.h:41:13: warning: 'SPDLOG_HEADER_ONLY' macro redefined [-Wmacro-redefined]
+   41 | #    define SPDLOG_HEADER_ONLY
+      |             ^
+<command line>:2:9: note: previous definition is here
+    2 | #define SPDLOG_HEADER_ONLY 1
+      |         ^
+1 warning generated.
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/contacts/finder.cpp:5:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/contacts/advanced/detector.hpp:6:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/contacts/advanced/algorithm/gaussian_fitting.hpp:15:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/spdlog.h:12:
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/common.h:41:13: warning: 'SPDLOG_HEADER_ONLY' macro redefined [-Wmacro-redefined]
+   41 | #    define SPDLOG_HEADER_ONLY
+      |             ^
+<command line>:2:9: note: previous definition is here
+    2 | #define SPDLOG_HEADER_ONLY 1
+      |         ^
+1 warning generated.
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/daemon/main.cpp:7:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/daemon/touch.hpp:10:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/spdlog.h:12:
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/common.h:41:13: warning: 'SPDLOG_HEADER_ONLY' macro redefined [-Wmacro-redefined]
+   41 | #    define SPDLOG_HEADER_ONLY
+      |             ^
+<command line>:2:9: note: previous definition is here
+    2 | #define SPDLOG_HEADER_ONLY 1
+      |         ^
+1 warning generated.
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/daemon/touch.cpp:3:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/IPTSDaemon/IPTSDaemon/daemon/touch.hpp:10:
+In file included from /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/spdlog.h:12:
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/src/spdlog/include/spdlog/common.h:41:13: warning: 'SPDLOG_HEADER_ONLY' macro redefined [-Wmacro-redefined]
+   41 | #    define SPDLOG_HEADER_ONLY
+      |             ^
+<command line>:2:9: note: previous definition is here
+    2 | #define SPDLOG_HEADER_ONLY 1
+      |         ^
+1 warning generated.
+== dynamic libraries (must be system only)
+/Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/IPTSDaemon:
+	/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit (compatibility version 1.0.0, current version 275.0.0)
+	/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 3502.1.255)
+	/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1900.180.0)
+	/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
+BUILT: /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/iptsd/build/IPTSDaemon
+### step __run_10
+pen helper: included
+pkgbuild: Inferring bundle components from contents of /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/root
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/FeatureUnlock.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/SMCBatteryManager.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooGPIO.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma144.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/SMCProcessor.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-BigSur.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface.kext/Contents/PlugIns/VoodooSerial.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Ventura.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooInput.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Catalina.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/Lilu.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/HoRNDIS.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/SMCSuperIO.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/TypeCover3.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface.kext/Contents/PlugIns/VoodooInput.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/USBMap.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/RestrictEvents.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/HibernationFixup.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Monterey.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/NVMeFix.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/VirtualSMC.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Tahoe.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/IntelBluetoothFirmware.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/SMCLightSensor.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface-6.6RC-Custom.kext/Contents/PlugIns/VoodooSerial.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/CpuTscSync.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/WhateverGreen.kext
+pkgbuild: Adding component at Applications/SurfaceTouchKeys.app
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/AppleALC.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/VoodooInput.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BlueToolFixup.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/EFI/OC/Kexts/BigSurface.kext/Contents/PlugIns/VoodooGPIO.kext
+pkgbuild: Adding top-level preinstall script
+pkgbuild: Adding top-level postinstall script
+pkgbuild: Wrote package to /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/component.pkg
+productbuild: Wrote product to /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/SurfaceTouchMac-Setup.pkg
+== package contents
+  .
+  ./usr
+  ./usr/local
+  ./usr/local/bin
+  ./usr/local/bin/IPTSDaemon
+  ./usr/local/iptsd
+  ./usr/local/iptsd/iptsd.conf
+  ./Library
+  ./Library/SurfaceTouchMac
+  ./Library/SurfaceTouchMac/bin
+  ./Library/SurfaceTouchMac/bin/stm-setup
+  ./Library/SurfaceTouchMac/bin/macserial
+  ./Library/SurfaceTouchMac/EFI
+  ./Library/SurfaceTouchMac/EFI/BOOT
+  ./Library/SurfaceTouchMac/EFI/BOOT/BOOTIA32.EFI
+  ./Library/SurfaceTouchMac/EFI/BOOT/MokManager.efi
+  ./Library/SurfaceTouchMac/EFI/BOOT/BOOTX64.EFI
+  ./Library/SurfaceTouchMac/EFI/BOOT/grubia32.efi
+  ./Library/SurfaceTouchMac/EFI/BOOT/.contentFlavour
+  ./Library/SurfaceTouchMac/EFI/BOOT/grub.efi
+  ./Library/SurfaceTouchMac/EFI/BOOT/grubx64_real.efi
+  ./Library/SurfaceTouchMac/EFI/BOOT/grubia32_real.efi
+  ./Library/SurfaceTouchMac/EFI/BOOT/BOOTMIPS.EFI
+  ./Library/SurfaceTouchMac/EFI/BOOT/BOOTAA64.EFI
+  ./Library/SurfaceTouchMac/EFI/BOOT/.contentVisibility
+  ./Library/SurfaceTouchMac/EFI/BOOT/mmia32.efi
+  ./Library/SurfaceTouchMac/EFI/OC
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-PLUG-DRTNIA.aml
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-GPRW.aml
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-AWAC.aml
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-RHUB.aml
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-EC-USBX-LAPTOP.aml
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-PNLF-CFL.aml
+  ./Library/SurfaceTouchMac/EFI/OC/ACPI/SSDT-SURFACE.aml
+  ./Library/SurfaceTouchMac/EFI/OC/Tools
+  ./Library/SurfaceTouchMac/EFI/OC/Tools/OpenShell.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Tools/MokManager.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Tools/ChipTune.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Tools/OpenControl.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Tools/CleanNvram.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Tools/ResetSystem.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/ext4_x64.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/btrfs_x64.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/OpenRuntime.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/ResetNvramEntry.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/OpenCanopy.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/FirmwareSettingsEntry.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/OpenLinuxBoot.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/ToggleSipEntry.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/OpenNtfsDxe.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/OpenHfsPlus.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Drivers/AudioDxe.efi
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/Lilu.kext
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/Lilu.kext/Contents
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/Lilu.kext/Contents/MacOS
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/Lilu.kext/Contents/MacOS/Lilu
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/Lilu.kext/Contents/Info.plist
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/HibernationFixup.kext
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/HibernationFixup.kext/Contents
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/HibernationFixup.kext/Contents/MacOS
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/HibernationFixup.kext/Contents/MacOS/HibernationFixup
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/HibernationFixup.kext/Contents/Info.plist
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Ventura.kext
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Ventura.kext/Contents
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Ventura.kext/Contents/MacOS
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Ventura.kext/Contents/MacOS/AirportItlwm
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Ventura.kext/Contents/Info.plist
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma.kext
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma.kext/Contents
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma.kext/Contents/MacOS
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma.kext/Contents/MacOS/AirportItlwm
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AirportItlwm-Sonoma.kext/Contents/Info.plist
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AppleALC.kext
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AppleALC.kext/Contents
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AppleALC.kext/Contents/MacOS
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AppleALC.kext/Contents/MacOS/AppleALC
+  ./Library/SurfaceTouchMac/EFI/OC/Kexts/AppleALC.kext/Contents/Info.plist
+Package "SurfaceTouchMac-Setup.pkg":
+   Status: no signature
+(unsigned: no Developer ID Installer certificate)
+4beaa53fc423df66a50d354fd45954d749199586ae3e76f93e64cc5c4060dde0  /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/SurfaceTouchMac-Setup.pkg
+== keyboard-only update package
+pkgbuild: Inferring bundle components from contents of /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/kbupdate/root
+pkgbuild: Adding component at Applications/SurfaceTouchKeys.app
+pkgbuild: Adding top-level postinstall script
+pkgbuild: Wrote package to /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/SurfaceTouchKeys-Update.pkg
+.
+./Library
+./Library/LaunchAgents
+./Library/LaunchAgents/com.kaminofilms.surfacetouchkeys.plist
+./Applications
+467162b26d85e2ebd1a5a8aac5462ef2da2fe691f28629b5376fa591fa3d01d5  /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/SurfaceTouchKeys-Update.pkg
+== touch + keyboard update package
+pkgbuild: Inferring bundle components from contents of /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/update/root
+pkgbuild: Adding component at Library/SurfaceTouchMac/update/BigSurface.kext/Contents/PlugIns/VoodooSerial.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/update/BigSurface.kext/Contents/PlugIns/VoodooInput.kext
+pkgbuild: Adding component at Applications/SurfaceTouchKeys.app
+pkgbuild: Adding component at Library/SurfaceTouchMac/update/BigSurface.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/update/BigSurface.kext/Contents/PlugIns/VoodooGPIO.kext
+pkgbuild: Adding component at Library/SurfaceTouchMac/update/BigSurface.kext/Contents/PlugIns/BigSurfaceHIDDriver.kext
+pkgbuild: Adding top-level postinstall script
+pkgbuild: Wrote package to /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/SurfaceTouchMac-Update.pkg
+./Library/SurfaceTouchMac/update/BigSurface.kext
+./Library/SurfaceTouchMac/bin/stm-setup
+./Applications/SurfaceTouchKeys.app
+5d5af404c10ebab955340e945c7a5e7077ab31017c786c47e29dbd911c30da6a  /Users/runner/work/SurfaceTouchMac/SurfaceTouchMac/setup/build/SurfaceTouchMac-Update.pkg
+### step __run_11
+local signing: created a signing key for this Mac
+/Users/runner/work/_temp/b1/SurfaceTouchKeys.app: replacing existing signature
+local signing: signed /Users/runner/work/_temp/b1/SurfaceTouchKeys.app (F2B66B72311054833FF2C0A24E888B3E4D9FC592)
+/Users/runner/work/_temp/b2/SurfaceTouchKeys.app: replacing existing signature
+local signing: signed /Users/runner/work/_temp/b2/SurfaceTouchKeys.app (F2B66B72311054833FF2C0A24E888B3E4D9FC592)
+build 1: designated => identifier "com.kaminofilms.surfacetouchkeys" and certificate leaf = H"f2b66b72311054833ff2c0a24e888b3e4d9fc592"
+build 2: designated => identifier "com.kaminofilms.surfacetouchkeys" and certificate leaf = H"f2b66b72311054833ff2c0a24e888b3e4d9fc592"
+CHECK local_sign_same_identity PASS
+SurfaceTouchKeys 0.1.35
+CHECK local_signed_app_runs PASS
+total 64
+-r--------  1 root  staff      0 Nov  5 01:17 .fl2002A065
+-rw-------  1 root  staff     65 Nov  5 01:17 keychain-password
+-rw-------  1 root  staff  26008 Nov  5 01:17 stm-signing.keychain-db
+### step __run_12
+stm-setup: REFUSED: CPU 'Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz' is not a Surface Pro 7 CPU
+exit=2
+stm-setup: REFUSED: CPU 'Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz' is not a Surface Pro 7 CPU
+exit=2
+stm-setup: REFUSED: CPU 'Intel(R) Core(TM) i7-8700B CPU @ 3.20GHz' is not a Surface Pro 7 CPU
+exit=2
+### step __run_13
+62b6280c9be62bc15f6eb496105a30b60198d723539bfc01b09d0dde0b467047  SurfaceTouchMac-payload.zip

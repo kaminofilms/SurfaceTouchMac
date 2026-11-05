@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+  <title>SurfaceTouchMac</title>
+  <welcome file="welcome.html"/>
+  <options customize="never" require-scripts="true" hostArchitectures="x86_64"/>
+  <domains enable_localSystem="true"/>
+  <choices-outline><line choice="default"/></choices-outline>
+  <choice id="default" title="SurfaceTouchMac"><pkg-ref id="com.kaminofilms.surfacetouchmac"/></choice>
+  <pkg-ref id="com.kaminofilms.surfacetouchmac" version="0.1.35" onConclusion="none">component.pkg</pkg-ref>
+</installer-gui-script>
