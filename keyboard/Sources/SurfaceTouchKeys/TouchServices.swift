@@ -123,7 +123,10 @@ enum MenuReader {
             guard (attr(item, kAXRoleAttribute) as? String) == "AXMenuItem" else { continue }
             let title = attr(item, kAXTitleAttribute) as? String ?? ""
             // hidden Option/Shift alternates ("Restart" next to "Restart…")
-            if attr(item, "AXMenuItemPrimaryUIElement") != nil { continue }
+            // (an alternate points at a different item as its primary; ordinary items
+            // report themselves or nothing)
+            if let pr = attr(item, "AXMenuItemPrimaryUIElement"), CFGetTypeID(pr) == AXUIElementGetTypeID(),
+               !CFEqual(pr, item) { continue }
             if MenuAlternates.repeatsPrevious(title, previous: out.last?.title) { continue }
             let enabled = attr(item, kAXEnabledAttribute) as? Bool ?? true
             let mark = attr(item, "AXMenuItemMarkChar") as? String ?? ""
